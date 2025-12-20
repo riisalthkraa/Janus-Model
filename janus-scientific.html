@@ -1,0 +1,1619 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modèle Janus — Simulation Scientifique</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --positive: #00d4ff;
+            --positive-dim: #0088aa;
+            --negative: #ff6b35;
+            --negative-dim: #aa4420;
+            --attraction: #00ff88;
+            --repulsion: #ff3366;
+            --bg-primary: #0a0e14;
+            --bg-secondary: #111820;
+            --bg-panel: rgba(10, 14, 20, 0.95);
+            --border: rgba(0, 212, 255, 0.2);
+            --text-primary: #e6edf3;
+            --text-secondary: #7d8590;
+            --text-dim: #484f58;
+            --grid: rgba(0, 212, 255, 0.08);
+        }
+
+        body {
+            font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #canvas-container {
+            position: fixed;
+            top: 48px;
+            left: 320px;
+            width: calc(100% - 620px);
+            height: calc(100% - 84px);
+            z-index: 1;
+            background: var(--bg-primary);
+            overflow: hidden;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-title {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        .header-title span {
+            color: var(--text-secondary);
+            font-weight: 300;
+        }
+
+        .header-status {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--attraction);
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.paused {
+            background: var(--repulsion);
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* Left Panel - Equations & Theory */
+        .panel-left {
+            position: fixed;
+            top: 48px;
+            left: 0;
+            width: 320px;
+            height: calc(100vh - 48px);
+            background: var(--bg-panel);
+            border-right: 1px solid var(--border);
+            z-index: 100;
+            overflow-y: auto;
+            backdrop-filter: blur(10px);
+        }
+
+        .panel-section {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .panel-section-title {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        /* Equations */
+        .equation-block {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 12px;
+            margin-bottom: 10px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+        }
+
+        .equation-label {
+            font-size: 9px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+
+        .equation-content {
+            color: var(--positive);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .equation-content.negative {
+            color: var(--negative);
+        }
+
+        /* Interaction Matrix */
+        .interaction-matrix {
+            display: grid;
+            grid-template-columns: 60px 1fr 1fr;
+            gap: 2px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+        }
+
+        .matrix-cell {
+            background: var(--bg-secondary);
+            padding: 8px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .matrix-header {
+            background: transparent;
+            color: var(--text-secondary);
+            font-weight: 500;
+            border: none;
+        }
+
+        .matrix-cell.attract {
+            color: var(--attraction);
+            border-color: rgba(0, 255, 136, 0.3);
+        }
+
+        .matrix-cell.repel {
+            color: var(--repulsion);
+            border-color: rgba(255, 51, 102, 0.3);
+        }
+
+        .force-arrow {
+            font-size: 16px;
+        }
+
+        /* Legend */
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+        }
+
+        .legend-color {
+            width: 24px;
+            height: 4px;
+            border-radius: 2px;
+        }
+
+        .legend-color.positive { background: var(--positive); box-shadow: 0 0 8px var(--positive); }
+        .legend-color.negative { background: var(--negative); box-shadow: 0 0 8px var(--negative); }
+        .legend-color.attraction { background: var(--attraction); }
+        .legend-color.repulsion { background: var(--repulsion); }
+        .legend-color.velocity { 
+            background: linear-gradient(90deg, #ffff00, #ff00ff);
+        }
+
+        /* Right Panel - Data & Controls */
+        .panel-right {
+            position: fixed;
+            top: 48px;
+            right: 0;
+            width: 300px;
+            height: calc(100vh - 48px);
+            background: var(--bg-panel);
+            border-left: 1px solid var(--border);
+            z-index: 100;
+            overflow-y: auto;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Data Grid */
+        .data-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .data-cell {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 10px;
+        }
+
+        .data-label {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 9px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .data-value {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .data-value.positive { color: var(--positive); }
+        .data-value.negative { color: var(--negative); }
+        .data-value.attraction { color: var(--attraction); }
+        .data-value.repulsion { color: var(--repulsion); }
+
+        .data-unit {
+            font-size: 10px;
+            color: var(--text-secondary);
+            margin-left: 2px;
+        }
+
+        /* Charts */
+        .chart-container {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+
+        .chart-title {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .chart-canvas {
+            width: 100%;
+            height: 80px;
+            background: var(--bg-primary);
+            border-radius: 2px;
+        }
+
+        /* Controls */
+        .control-group {
+            margin-bottom: 14px;
+        }
+
+        .control-label {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .control-value {
+            color: var(--positive);
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 4px;
+            background: var(--bg-secondary);
+            border-radius: 2px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            background: var(--positive);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--positive);
+        }
+
+        .btn-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 8px 12px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            border-color: var(--positive);
+            background: rgba(0, 212, 255, 0.1);
+        }
+
+        .btn.active {
+            background: rgba(0, 212, 255, 0.15);
+            border-color: var(--positive);
+            color: var(--positive);
+        }
+
+        .btn.full-width {
+            grid-column: span 2;
+        }
+
+        /* Toggle */
+        .toggle-group {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 10px;
+        }
+
+        .toggle-btn {
+            flex: 1;
+            padding: 6px 10px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 9px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .toggle-btn:first-child { border-radius: 4px 0 0 4px; }
+        .toggle-btn:last-child { border-radius: 0 4px 4px 0; }
+
+        .toggle-btn.active {
+            background: rgba(0, 212, 255, 0.15);
+            border-color: var(--positive);
+            color: var(--positive);
+        }
+
+        /* Bottom Stats Bar */
+        .stats-bar {
+            position: fixed;
+            bottom: 0;
+            left: 320px;
+            right: 300px;
+            height: 36px;
+            background: var(--bg-panel);
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 100;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .stats-group {
+            display: flex;
+            gap: 24px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .stat-label {
+            color: var(--text-dim);
+        }
+
+        .stat-value {
+            color: var(--text-primary);
+        }
+
+        /* View Controls */
+        .view-controls {
+            position: fixed;
+            bottom: 50px;
+            left: 320px;
+            right: 300px;
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            z-index: 100;
+        }
+
+        .view-btn {
+            padding: 8px 16px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-secondary);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            backdrop-filter: blur(10px);
+        }
+
+        .view-btn:hover, .view-btn.active {
+            border-color: var(--positive);
+            color: var(--positive);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--positive-dim);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-title">
+            JANUS COSMOLOGICAL MODEL <span>/ Jean-Pierre Petit — Bimetric Simulation v2.0</span>
+        </div>
+        <div class="header-status">
+            <div class="status-item">
+                <div class="status-dot" id="status-dot"></div>
+                <span id="status-text">SIMULATION ACTIVE</span>
+            </div>
+            <div class="status-item">
+                <span>t = </span>
+                <span id="sim-time">0.000</span>
+                <span> s</span>
+            </div>
+            <div class="status-item">
+                <span>FPS: </span>
+                <span id="fps">60</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Left Panel -->
+    <aside class="panel-left">
+        <div class="panel-section">
+            <div class="panel-section-title">Field Equations (Bimetric)</div>
+            
+            <div class="equation-block">
+                <div class="equation-label">Positive Sector (+)</div>
+                <div class="equation-content">
+                    G<sup>+</sup><sub>μν</sub> = κ ( T<sup>+</sup><sub>μν</sub> − T<sup>−</sup><sub>μν</sub> )
+                </div>
+            </div>
+            
+            <div class="equation-block">
+                <div class="equation-label">Negative Sector (−)</div>
+                <div class="equation-content negative">
+                    G<sup>−</sup><sub>μν</sub> = κ ( T<sup>−</sup><sub>μν</sub> − T<sup>+</sup><sub>μν</sub> )
+                </div>
+            </div>
+
+            <div class="equation-block">
+                <div class="equation-label">Gravitational Force Law</div>
+                <div class="equation-content" style="color: var(--text-primary);">
+                    F = −G · m₁ · m₂ / r²
+                </div>
+            </div>
+        </div>
+
+        <div class="panel-section">
+            <div class="panel-section-title">Interaction Matrix</div>
+            
+            <div class="interaction-matrix">
+                <div class="matrix-cell matrix-header"></div>
+                <div class="matrix-cell matrix-header">m⁺</div>
+                <div class="matrix-cell matrix-header">m⁻</div>
+                
+                <div class="matrix-cell matrix-header">m⁺</div>
+                <div class="matrix-cell attract">
+                    <div class="force-arrow">← →</div>
+                    <div>ATTRACT</div>
+                </div>
+                <div class="matrix-cell repel">
+                    <div class="force-arrow">→ ←</div>
+                    <div>REPEL</div>
+                </div>
+                
+                <div class="matrix-cell matrix-header">m⁻</div>
+                <div class="matrix-cell repel">
+                    <div class="force-arrow">→ ←</div>
+                    <div>REPEL</div>
+                </div>
+                <div class="matrix-cell attract">
+                    <div class="force-arrow">← →</div>
+                    <div>ATTRACT</div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 12px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text-dim);">
+                Sign(m₁) = Sign(m₂) → Attraction<br>
+                Sign(m₁) ≠ Sign(m₂) → Repulsion
+            </div>
+        </div>
+
+        <div class="panel-section">
+            <div class="panel-section-title">Visual Legend</div>
+            
+            <div class="legend-item">
+                <div class="legend-color positive"></div>
+                <span>Positive mass particles (m⁺ > 0)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color negative"></div>
+                <span>Negative mass particles (m⁻ < 0)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color attraction"></div>
+                <span>Attractive force vectors</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color repulsion"></div>
+                <span>Repulsive force vectors</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color velocity"></div>
+                <span>Velocity vectors (scaled)</span>
+            </div>
+        </div>
+
+        <div class="panel-section">
+            <div class="panel-section-title">Model Parameters</div>
+            
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text-secondary); line-height: 1.8;">
+                <div>κ = 8πG/c⁴ (coupling constant)</div>
+                <div>c⁺ = c (positive light speed)</div>
+                <div>c⁻ = c · √(ρ⁺/ρ⁻) (negative sector)</div>
+                <div>Λ = 0 (no cosmological constant)</div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Right Panel -->
+    <aside class="panel-right">
+        <div class="panel-section">
+            <div class="panel-section-title">Real-Time Data</div>
+            
+            <div class="data-grid">
+                <div class="data-cell">
+                    <div class="data-label">Positive Masses</div>
+                    <div class="data-value positive" id="n-positive">0</div>
+                </div>
+                <div class="data-cell">
+                    <div class="data-label">Negative Masses</div>
+                    <div class="data-value negative" id="n-negative">0</div>
+                </div>
+                <div class="data-cell">
+                    <div class="data-label">Attractive Pairs</div>
+                    <div class="data-value attraction" id="n-attract">0</div>
+                </div>
+                <div class="data-cell">
+                    <div class="data-label">Repulsive Pairs</div>
+                    <div class="data-value repulsion" id="n-repel">0</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel-section">
+            <div class="panel-section-title">Energy Analysis</div>
+            
+            <div class="chart-container">
+                <div class="chart-title">Total Kinetic Energy E<sub>k</sub>(t)</div>
+                <canvas class="chart-canvas" id="chart-energy"></canvas>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-title">Potential Energy E<sub>p</sub>(t)</div>
+                <canvas class="chart-canvas" id="chart-potential"></canvas>
+            </div>
+
+            <div class="data-grid" style="margin-top: 10px;">
+                <div class="data-cell">
+                    <div class="data-label">Total E<sub>k</sub></div>
+                    <div class="data-value" id="total-ek">0.00<span class="data-unit">J</span></div>
+                </div>
+                <div class="data-cell">
+                    <div class="data-label">Total E<sub>p</sub></div>
+                    <div class="data-value" id="total-ep">0.00<span class="data-unit">J</span></div>
+                </div>
+                <div class="data-cell">
+                    <div class="data-label">Σm⁺</div>
+                    <div class="data-value positive" id="sum-positive">0.00<span class="data-unit">kg</span></div>
+                </div>
+                <div class="data-cell">
+                    <div class="data-label">Σm⁻</div>
+                    <div class="data-value negative" id="sum-negative">0.00<span class="data-unit">kg</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel-section">
+            <div class="panel-section-title">Simulation Controls</div>
+            
+            <div class="control-group">
+                <div class="control-label">
+                    <span>Gravitational Constant G</span>
+                    <span class="control-value" id="g-value">1.00</span>
+                </div>
+                <input type="range" id="ctrl-gravity" min="0.1" max="3" step="0.05" value="1">
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>Time Scale Δt</span>
+                    <span class="control-value" id="dt-value">1.00</span>
+                </div>
+                <input type="range" id="ctrl-speed" min="0.1" max="3" step="0.1" value="1">
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>Softening Parameter ε</span>
+                    <span class="control-value" id="soft-value">2.00</span>
+                </div>
+                <input type="range" id="ctrl-softening" min="0.5" max="5" step="0.25" value="2">
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>Particle Count N</span>
+                    <span class="control-value" id="n-value">80</span>
+                </div>
+                <input type="range" id="ctrl-particles" min="20" max="200" step="10" value="80">
+            </div>
+        </div>
+
+        <div class="panel-section">
+            <div class="panel-section-title">Display Options</div>
+            
+            <div class="toggle-group">
+                <button class="toggle-btn active" id="toggle-forces">Forces</button>
+                <button class="toggle-btn active" id="toggle-velocity">Velocity</button>
+                <button class="toggle-btn" id="toggle-trails">Trails</button>
+            </div>
+
+            <div class="toggle-group">
+                <button class="toggle-btn active" id="toggle-grid">Grid</button>
+                <button class="toggle-btn" id="toggle-labels">Labels</button>
+                <button class="toggle-btn" id="toggle-bounds">Bounds</button>
+            </div>
+
+            <div class="btn-group" style="margin-top: 12px;">
+                <button class="btn" id="btn-pause">⏸ PAUSE</button>
+                <button class="btn" id="btn-step">⏭ STEP</button>
+                <button class="btn full-width" id="btn-reset">↺ RESET SIMULATION</button>
+            </div>
+        </div>
+
+        <div class="panel-section">
+            <div class="panel-section-title">Initial Conditions</div>
+            
+            <div class="toggle-group">
+                <button class="toggle-btn active" id="ic-random">Random</button>
+                <button class="toggle-btn" id="ic-cluster">Cluster</button>
+                <button class="toggle-btn" id="ic-shell">Shell</button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Canvas Container -->
+    <div id="canvas-container"></div>
+
+    <!-- Bottom Stats Bar -->
+    <div class="stats-bar">
+        <div class="stats-group">
+            <div class="stat-item">
+                <span class="stat-label">⟨v⁺⟩:</span>
+                <span class="stat-value" id="avg-v-pos">0.00</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">⟨v⁻⟩:</span>
+                <span class="stat-value" id="avg-v-neg">0.00</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">|F<sub>max</sub>|:</span>
+                <span class="stat-value" id="f-max">0.00</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">r<sub>min</sub>:</span>
+                <span class="stat-value" id="r-min">0.00</span>
+            </div>
+        </div>
+        <div class="stats-group">
+            <div class="stat-item">
+                <span class="stat-label">CoM⁺:</span>
+                <span class="stat-value" id="com-pos">(0, 0, 0)</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">CoM⁻:</span>
+                <span class="stat-value" id="com-neg">(0, 0, 0)</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Controls -->
+    <div class="view-controls">
+        <button class="view-btn active" id="view-3d">3D View</button>
+        <button class="view-btn" id="view-xy">XY Plane</button>
+        <button class="view-btn" id="view-xz">XZ Plane</button>
+        <button class="view-btn" id="view-yz">YZ Plane</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // ================================================================
+        // JANUS COSMOLOGICAL MODEL - SCIENTIFIC SIMULATION
+        // Based on Jean-Pierre Petit's Bimetric Cosmological Model
+        // ================================================================
+
+        // === CONFIGURATION ===
+        const CONFIG = {
+            N_POSITIVE: 40,
+            N_NEGATIVE: 40,
+            BOUNDS: 100,
+            G: 1.0,
+            SOFTENING: 2.0,
+            DT_SCALE: 1.0,
+            MAX_VELOCITY: 2.0,
+            DAMPING: 0.999,
+            FORCE_SCALE: 15,
+            VELOCITY_SCALE: 8,
+            MAX_FORCE_LINES: 200,
+            TRAIL_LENGTH: 50
+        };
+
+        // === STATE ===
+        let particles = [];
+        let forceLines = [];
+        let velocityLines = [];
+        let trails = [];
+        let isPaused = false;
+        let showForces = true;
+        let showVelocity = true;
+        let showTrails = false;
+        let showGrid = true;
+        let showLabels = false;
+        let showBounds = false;
+        let initialCondition = 'random';
+        let simulationTime = 0;
+        let frameCount = 0;
+        let lastFpsTime = performance.now();
+        let fps = 60;
+
+        // Energy history for charts
+        let energyHistory = [];
+        let potentialHistory = [];
+        const HISTORY_LENGTH = 100;
+
+        // Three.js objects
+        let scene, camera, renderer;
+        let positiveGroup, negativeGroup;
+        let forceLineGroup, velocityLineGroup, trailGroup;
+        let gridHelper, boundsHelper;
+        let labelSprites = [];
+
+        // === INITIALIZATION ===
+        init();
+        animate();
+
+        function init() {
+            // Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0e14);
+
+            // Camera
+            camera = new THREE.PerspectiveCamera(50, getViewportWidth() / getViewportHeight(), 0.1, 2000);
+            camera.position.set(150, 100, 150);
+            camera.lookAt(0, 0, 0);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(getViewportWidth(), getViewportHeight());
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.domElement.style.display = 'block';
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+            // Groups
+            positiveGroup = new THREE.Group();
+            negativeGroup = new THREE.Group();
+            forceLineGroup = new THREE.Group();
+            velocityLineGroup = new THREE.Group();
+            trailGroup = new THREE.Group();
+            scene.add(positiveGroup, negativeGroup, forceLineGroup, velocityLineGroup, trailGroup);
+
+            // Grid
+            createGrid();
+
+            // Bounds
+            createBounds();
+
+            // Axes
+            createAxes();
+
+            // Initialize particles
+            initParticles();
+
+            // Setup controls
+            setupOrbitControls();
+            setupUI();
+
+            // Window resize
+            window.addEventListener('resize', onResize);
+        }
+
+        function getViewportWidth() {
+            return window.innerWidth - 620; // 320px left panel + 300px right panel
+        }
+
+        function getViewportHeight() {
+            return window.innerHeight - 84; // 48px header + 36px stats bar
+        }
+
+        function getViewportOffsetX() {
+            return 320; // Left panel width
+        }
+
+        function getViewportOffsetY() {
+            return 48; // Header height
+        }
+
+        function createGrid() {
+            gridHelper = new THREE.GridHelper(200, 20, 0x00d4ff, 0x1a2332);
+            gridHelper.material.opacity = 0.3;
+            gridHelper.material.transparent = true;
+            scene.add(gridHelper);
+
+            // Additional XZ plane grid lines
+            const gridMaterial = new THREE.LineBasicMaterial({ color: 0x00d4ff, opacity: 0.1, transparent: true });
+        }
+
+        function createBounds() {
+            const geometry = new THREE.BoxGeometry(CONFIG.BOUNDS * 2, CONFIG.BOUNDS * 2, CONFIG.BOUNDS * 2);
+            const edges = new THREE.EdgesGeometry(geometry);
+            const material = new THREE.LineBasicMaterial({ color: 0x00d4ff, opacity: 0.3, transparent: true });
+            boundsHelper = new THREE.LineSegments(edges, material);
+            boundsHelper.visible = showBounds;
+            scene.add(boundsHelper);
+        }
+
+        function createAxes() {
+            const axesLength = CONFIG.BOUNDS * 1.2;
+            
+            // X axis (red)
+            const xGeom = new THREE.BufferGeometry().setFromPoints([
+                new THREE.Vector3(0, 0, 0),
+                new THREE.Vector3(axesLength, 0, 0)
+            ]);
+            const xLine = new THREE.Line(xGeom, new THREE.LineBasicMaterial({ color: 0xff4444 }));
+            scene.add(xLine);
+
+            // Y axis (green)
+            const yGeom = new THREE.BufferGeometry().setFromPoints([
+                new THREE.Vector3(0, 0, 0),
+                new THREE.Vector3(0, axesLength, 0)
+            ]);
+            const yLine = new THREE.Line(yGeom, new THREE.LineBasicMaterial({ color: 0x44ff44 }));
+            scene.add(yLine);
+
+            // Z axis (blue)
+            const zGeom = new THREE.BufferGeometry().setFromPoints([
+                new THREE.Vector3(0, 0, 0),
+                new THREE.Vector3(0, 0, axesLength)
+            ]);
+            const zLine = new THREE.Line(zGeom, new THREE.LineBasicMaterial({ color: 0x4444ff }));
+            scene.add(zLine);
+        }
+
+        function initParticles() {
+            particles = [];
+            
+            // Clear existing meshes
+            while (positiveGroup.children.length) {
+                positiveGroup.remove(positiveGroup.children[0]);
+            }
+            while (negativeGroup.children.length) {
+                negativeGroup.remove(negativeGroup.children[0]);
+            }
+            while (trailGroup.children.length) {
+                trailGroup.remove(trailGroup.children[0]);
+            }
+            trails = [];
+
+            const posGeom = new THREE.SphereGeometry(2, 16, 16);
+            const negGeom = new THREE.SphereGeometry(1.5, 16, 16);
+            const posMat = new THREE.MeshBasicMaterial({ color: 0x00d4ff });
+            const negMat = new THREE.MeshBasicMaterial({ color: 0xff6b35 });
+
+            // Create positive particles
+            for (let i = 0; i < CONFIG.N_POSITIVE; i++) {
+                const pos = getInitialPosition(true);
+                const vel = getInitialVelocity();
+                const mass = 0.8 + Math.random() * 0.4;
+
+                const mesh = new THREE.Mesh(posGeom, posMat.clone());
+                mesh.position.copy(pos);
+                positiveGroup.add(mesh);
+
+                // Add glow
+                const glowGeom = new THREE.SphereGeometry(3, 16, 16);
+                const glowMat = new THREE.MeshBasicMaterial({ 
+                    color: 0x00d4ff, 
+                    transparent: true, 
+                    opacity: 0.2 
+                });
+                const glow = new THREE.Mesh(glowGeom, glowMat);
+                mesh.add(glow);
+
+                particles.push({
+                    mesh: mesh,
+                    position: pos,
+                    velocity: vel,
+                    mass: mass,
+                    isPositive: true,
+                    force: new THREE.Vector3(),
+                    trail: []
+                });
+
+                // Create trail line
+                const trailGeom = new THREE.BufferGeometry();
+                const trailPositions = new Float32Array(CONFIG.TRAIL_LENGTH * 3);
+                trailGeom.setAttribute('position', new THREE.BufferAttribute(trailPositions, 3));
+                const trailMat = new THREE.LineBasicMaterial({ color: 0x00d4ff, opacity: 0.3, transparent: true });
+                const trailLine = new THREE.Line(trailGeom, trailMat);
+                trailLine.visible = showTrails;
+                trailGroup.add(trailLine);
+                trails.push(trailLine);
+            }
+
+            // Create negative particles
+            for (let i = 0; i < CONFIG.N_NEGATIVE; i++) {
+                const pos = getInitialPosition(false);
+                const vel = getInitialVelocity();
+                const mass = -(0.5 + Math.random() * 0.3);
+
+                const mesh = new THREE.Mesh(negGeom, negMat.clone());
+                mesh.position.copy(pos);
+                negativeGroup.add(mesh);
+
+                // Add glow
+                const glowGeom = new THREE.SphereGeometry(2.5, 16, 16);
+                const glowMat = new THREE.MeshBasicMaterial({ 
+                    color: 0xff6b35, 
+                    transparent: true, 
+                    opacity: 0.15 
+                });
+                const glow = new THREE.Mesh(glowGeom, glowMat);
+                mesh.add(glow);
+
+                particles.push({
+                    mesh: mesh,
+                    position: pos,
+                    velocity: vel,
+                    mass: mass,
+                    isPositive: false,
+                    force: new THREE.Vector3(),
+                    trail: []
+                });
+
+                // Create trail line
+                const trailGeom = new THREE.BufferGeometry();
+                const trailPositions = new Float32Array(CONFIG.TRAIL_LENGTH * 3);
+                trailGeom.setAttribute('position', new THREE.BufferAttribute(trailPositions, 3));
+                const trailMat = new THREE.LineBasicMaterial({ color: 0xff6b35, opacity: 0.3, transparent: true });
+                const trailLine = new THREE.Line(trailGeom, trailMat);
+                trailLine.visible = showTrails;
+                trailGroup.add(trailLine);
+                trails.push(trailLine);
+            }
+
+            simulationTime = 0;
+            energyHistory = [];
+            potentialHistory = [];
+            updateStats();
+        }
+
+        function getInitialPosition(isPositive) {
+            const b = CONFIG.BOUNDS * 0.8;
+            
+            switch (initialCondition) {
+                case 'cluster':
+                    const center = isPositive ? new THREE.Vector3(30, 0, 0) : new THREE.Vector3(-30, 0, 0);
+                    return new THREE.Vector3(
+                        center.x + (Math.random() - 0.5) * 40,
+                        center.y + (Math.random() - 0.5) * 40,
+                        center.z + (Math.random() - 0.5) * 40
+                    );
+                case 'shell':
+                    const radius = isPositive ? 40 : 60;
+                    const theta = Math.random() * Math.PI * 2;
+                    const phi = Math.acos(2 * Math.random() - 1);
+                    return new THREE.Vector3(
+                        radius * Math.sin(phi) * Math.cos(theta),
+                        radius * Math.sin(phi) * Math.sin(theta),
+                        radius * Math.cos(phi)
+                    );
+                default: // random
+                    return new THREE.Vector3(
+                        (Math.random() - 0.5) * b * 2,
+                        (Math.random() - 0.5) * b * 2,
+                        (Math.random() - 0.5) * b * 2
+                    );
+            }
+        }
+
+        function getInitialVelocity() {
+            return new THREE.Vector3(
+                (Math.random() - 0.5) * 0.5,
+                (Math.random() - 0.5) * 0.5,
+                (Math.random() - 0.5) * 0.5
+            );
+        }
+
+        // === PHYSICS ===
+        function updatePhysics(dt) {
+            if (isPaused) return;
+
+            const actualDt = dt * CONFIG.DT_SCALE * 0.016;
+            let attractCount = 0;
+            let repelCount = 0;
+            let minDist = Infinity;
+            let maxForce = 0;
+
+            // Reset forces
+            particles.forEach(p => p.force.set(0, 0, 0));
+
+            // Calculate forces (N-body)
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const p1 = particles[i];
+                    const p2 = particles[j];
+
+                    const dx = p2.position.x - p1.position.x;
+                    const dy = p2.position.y - p1.position.y;
+                    const dz = p2.position.z - p1.position.z;
+                    const distSq = dx*dx + dy*dy + dz*dz + CONFIG.SOFTENING * CONFIG.SOFTENING;
+                    const dist = Math.sqrt(distSq);
+
+                    minDist = Math.min(minDist, dist);
+
+                    // Janus interaction rule:
+                    // Same sign masses: ATTRACT (standard gravity)
+                    // Opposite sign masses: REPEL
+                    const sign1 = Math.sign(p1.mass);
+                    const sign2 = Math.sign(p2.mass);
+                    const interaction = sign1 * sign2; // +1 attract, -1 repel
+
+                    if (interaction > 0) attractCount++;
+                    else repelCount++;
+
+                    // Force magnitude: F = G * |m1| * |m2| / r^2
+                    // For attraction: force points toward other particle
+                    // For repulsion: force points away from other particle
+                    const forceMag = CONFIG.G * Math.abs(p1.mass) * Math.abs(p2.mass) / distSq;
+                    maxForce = Math.max(maxForce, forceMag);
+
+                    const fx = forceMag * dx / dist * interaction;
+                    const fy = forceMag * dy / dist * interaction;
+                    const fz = forceMag * dz / dist * interaction;
+
+                    // Apply Newton's third law
+                    p1.force.x += fx;
+                    p1.force.y += fy;
+                    p1.force.z += fz;
+
+                    p2.force.x -= fx;
+                    p2.force.y -= fy;
+                    p2.force.z -= fz;
+                }
+            }
+
+            // Update velocities and positions
+            particles.forEach((p, i) => {
+                // a = F / |m|
+                const ax = p.force.x / Math.abs(p.mass);
+                const ay = p.force.y / Math.abs(p.mass);
+                const az = p.force.z / Math.abs(p.mass);
+
+                p.velocity.x += ax * actualDt;
+                p.velocity.y += ay * actualDt;
+                p.velocity.z += az * actualDt;
+
+                // Damping
+                p.velocity.multiplyScalar(CONFIG.DAMPING);
+
+                // Clamp velocity
+                const speed = p.velocity.length();
+                if (speed > CONFIG.MAX_VELOCITY) {
+                    p.velocity.multiplyScalar(CONFIG.MAX_VELOCITY / speed);
+                }
+
+                // Update position
+                p.position.x += p.velocity.x * actualDt;
+                p.position.y += p.velocity.y * actualDt;
+                p.position.z += p.velocity.z * actualDt;
+
+                // Boundary reflection
+                const bound = CONFIG.BOUNDS;
+                ['x', 'y', 'z'].forEach(axis => {
+                    if (Math.abs(p.position[axis]) > bound) {
+                        p.position[axis] = Math.sign(p.position[axis]) * bound;
+                        p.velocity[axis] *= -0.5;
+                    }
+                });
+
+                // Update mesh
+                p.mesh.position.copy(p.position);
+
+                // Update trail
+                if (showTrails) {
+                    p.trail.push(p.position.clone());
+                    if (p.trail.length > CONFIG.TRAIL_LENGTH) {
+                        p.trail.shift();
+                    }
+                    updateTrail(i);
+                }
+            });
+
+            simulationTime += actualDt;
+
+            // Update visualization
+            if (showForces) updateForceLines();
+            if (showVelocity) updateVelocityLines();
+
+            // Update stats
+            document.getElementById('n-attract').textContent = attractCount;
+            document.getElementById('n-repel').textContent = repelCount;
+            document.getElementById('f-max').textContent = maxForce.toFixed(3);
+            document.getElementById('r-min').textContent = minDist.toFixed(2);
+
+            // Calculate and store energies
+            calculateEnergies();
+        }
+
+        function updateForceLines() {
+            // Clear existing force lines
+            while (forceLineGroup.children.length) {
+                forceLineGroup.remove(forceLineGroup.children[0]);
+            }
+
+            let lineCount = 0;
+            const material_attract = new THREE.LineBasicMaterial({ color: 0x00ff88, opacity: 0.6, transparent: true });
+            const material_repel = new THREE.LineBasicMaterial({ color: 0xff3366, opacity: 0.6, transparent: true });
+
+            for (let i = 0; i < particles.length && lineCount < CONFIG.MAX_FORCE_LINES; i++) {
+                for (let j = i + 1; j < particles.length && lineCount < CONFIG.MAX_FORCE_LINES; j++) {
+                    const p1 = particles[i];
+                    const p2 = particles[j];
+
+                    const dist = p1.position.distanceTo(p2.position);
+                    if (dist > 50) continue; // Only show nearby interactions
+
+                    const sign1 = Math.sign(p1.mass);
+                    const sign2 = Math.sign(p2.mass);
+                    const isAttraction = sign1 * sign2 > 0;
+
+                    const points = [p1.position.clone(), p2.position.clone()];
+                    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                    const line = new THREE.Line(geometry, isAttraction ? material_attract : material_repel);
+                    forceLineGroup.add(line);
+                    lineCount++;
+                }
+            }
+        }
+
+        function updateVelocityLines() {
+            // Clear existing velocity lines
+            while (velocityLineGroup.children.length) {
+                velocityLineGroup.remove(velocityLineGroup.children[0]);
+            }
+
+            const material = new THREE.LineBasicMaterial({ 
+                color: 0xffff00, 
+                opacity: 0.8, 
+                transparent: true 
+            });
+
+            particles.forEach(p => {
+                const end = p.position.clone().add(p.velocity.clone().multiplyScalar(CONFIG.VELOCITY_SCALE));
+                const points = [p.position.clone(), end];
+                const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                const line = new THREE.Line(geometry, material);
+                velocityLineGroup.add(line);
+
+                // Arrow head
+                const dir = p.velocity.clone().normalize();
+                const arrowLength = 1.5;
+                const arrowGeom = new THREE.ConeGeometry(0.5, arrowLength, 8);
+                const arrowMat = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+                const arrow = new THREE.Mesh(arrowGeom, arrowMat);
+                arrow.position.copy(end);
+                arrow.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
+                velocityLineGroup.add(arrow);
+            });
+        }
+
+        function updateTrail(index) {
+            const p = particles[index];
+            const trail = trails[index];
+            const positions = trail.geometry.attributes.position.array;
+
+            for (let i = 0; i < p.trail.length; i++) {
+                positions[i * 3] = p.trail[i].x;
+                positions[i * 3 + 1] = p.trail[i].y;
+                positions[i * 3 + 2] = p.trail[i].z;
+            }
+
+            trail.geometry.attributes.position.needsUpdate = true;
+            trail.geometry.setDrawRange(0, p.trail.length);
+        }
+
+        function calculateEnergies() {
+            let Ek = 0;
+            let Ep = 0;
+
+            // Kinetic energy
+            particles.forEach(p => {
+                Ek += 0.5 * Math.abs(p.mass) * p.velocity.lengthSq();
+            });
+
+            // Potential energy
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const p1 = particles[i];
+                    const p2 = particles[j];
+                    const dist = p1.position.distanceTo(p2.position) + CONFIG.SOFTENING;
+                    const sign = Math.sign(p1.mass) * Math.sign(p2.mass);
+                    Ep -= sign * CONFIG.G * Math.abs(p1.mass) * Math.abs(p2.mass) / dist;
+                }
+            }
+
+            // Update displays
+            document.getElementById('total-ek').innerHTML = Ek.toFixed(2) + '<span class="data-unit">J</span>';
+            document.getElementById('total-ep').innerHTML = Ep.toFixed(2) + '<span class="data-unit">J</span>';
+
+            // Store history
+            energyHistory.push(Ek);
+            potentialHistory.push(Ep);
+            if (energyHistory.length > HISTORY_LENGTH) {
+                energyHistory.shift();
+                potentialHistory.shift();
+            }
+
+            // Draw charts
+            drawChart('chart-energy', energyHistory, '#00d4ff');
+            drawChart('chart-potential', potentialHistory, '#ff6b35');
+        }
+
+        function drawChart(canvasId, data, color) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width = canvas.offsetWidth * 2;
+            const height = canvas.height = canvas.offsetHeight * 2;
+            ctx.scale(2, 2);
+
+            ctx.clearRect(0, 0, width, height);
+
+            if (data.length < 2) return;
+
+            const min = Math.min(...data);
+            const max = Math.max(...data);
+            const range = max - min || 1;
+            const w = canvas.offsetWidth;
+            const h = canvas.offsetHeight;
+
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+
+            data.forEach((val, i) => {
+                const x = (i / (data.length - 1)) * w;
+                const y = h - ((val - min) / range) * (h - 10) - 5;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+
+            ctx.stroke();
+
+            // Draw current value
+            ctx.fillStyle = color;
+            ctx.font = '9px IBM Plex Mono';
+            ctx.fillText(data[data.length - 1].toFixed(2), w - 40, 12);
+        }
+
+        function updateStats() {
+            const positive = particles.filter(p => p.isPositive);
+            const negative = particles.filter(p => !p.isPositive);
+
+            document.getElementById('n-positive').textContent = positive.length;
+            document.getElementById('n-negative').textContent = negative.length;
+
+            // Sum of masses
+            const sumPos = positive.reduce((sum, p) => sum + p.mass, 0);
+            const sumNeg = negative.reduce((sum, p) => sum + p.mass, 0);
+            document.getElementById('sum-positive').innerHTML = sumPos.toFixed(2) + '<span class="data-unit">kg</span>';
+            document.getElementById('sum-negative').innerHTML = sumNeg.toFixed(2) + '<span class="data-unit">kg</span>';
+
+            // Average velocities
+            const avgVPos = positive.length > 0 ? 
+                positive.reduce((sum, p) => sum + p.velocity.length(), 0) / positive.length : 0;
+            const avgVNeg = negative.length > 0 ? 
+                negative.reduce((sum, p) => sum + p.velocity.length(), 0) / negative.length : 0;
+            document.getElementById('avg-v-pos').textContent = avgVPos.toFixed(3);
+            document.getElementById('avg-v-neg').textContent = avgVNeg.toFixed(3);
+
+            // Center of mass
+            if (positive.length > 0) {
+                const comPos = positive.reduce((com, p) => {
+                    return com.add(p.position.clone().multiplyScalar(p.mass));
+                }, new THREE.Vector3()).divideScalar(sumPos);
+                document.getElementById('com-pos').textContent = 
+                    `(${comPos.x.toFixed(1)}, ${comPos.y.toFixed(1)}, ${comPos.z.toFixed(1)})`;
+            }
+
+            if (negative.length > 0) {
+                const comNeg = negative.reduce((com, p) => {
+                    return com.add(p.position.clone().multiplyScalar(Math.abs(p.mass)));
+                }, new THREE.Vector3()).divideScalar(Math.abs(sumNeg));
+                document.getElementById('com-neg').textContent = 
+                    `(${comNeg.x.toFixed(1)}, ${comNeg.y.toFixed(1)}, ${comNeg.z.toFixed(1)})`;
+            }
+        }
+
+        // === CONTROLS ===
+        function setupOrbitControls() {
+            let isDragging = false;
+            let prevMouse = { x: 0, y: 0 };
+            let theta = Math.PI / 4;
+            let phi = Math.PI / 3;
+            let radius = 250;
+
+            const updateCamera = () => {
+                camera.position.x = radius * Math.sin(phi) * Math.cos(theta);
+                camera.position.y = radius * Math.cos(phi);
+                camera.position.z = radius * Math.sin(phi) * Math.sin(theta);
+                camera.lookAt(0, 0, 0);
+            };
+
+            renderer.domElement.addEventListener('mousedown', e => {
+                isDragging = true;
+                prevMouse = { x: e.clientX, y: e.clientY };
+            });
+
+            renderer.domElement.addEventListener('mousemove', e => {
+                if (!isDragging) return;
+                const dx = e.clientX - prevMouse.x;
+                const dy = e.clientY - prevMouse.y;
+                theta -= dx * 0.005;
+                phi = Math.max(0.1, Math.min(Math.PI - 0.1, phi + dy * 0.005));
+                prevMouse = { x: e.clientX, y: e.clientY };
+                updateCamera();
+            });
+
+            renderer.domElement.addEventListener('mouseup', () => isDragging = false);
+            renderer.domElement.addEventListener('mouseleave', () => isDragging = false);
+
+            renderer.domElement.addEventListener('wheel', e => {
+                radius = Math.max(80, Math.min(500, radius + e.deltaY * 0.3));
+                updateCamera();
+            });
+
+            // View buttons
+            document.getElementById('view-3d').addEventListener('click', () => {
+                theta = Math.PI / 4;
+                phi = Math.PI / 3;
+                setActiveView('view-3d');
+                updateCamera();
+            });
+
+            document.getElementById('view-xy').addEventListener('click', () => {
+                theta = 0;
+                phi = 0.01;
+                setActiveView('view-xy');
+                updateCamera();
+            });
+
+            document.getElementById('view-xz').addEventListener('click', () => {
+                theta = 0;
+                phi = Math.PI / 2;
+                setActiveView('view-xz');
+                updateCamera();
+            });
+
+            document.getElementById('view-yz').addEventListener('click', () => {
+                theta = Math.PI / 2;
+                phi = Math.PI / 2;
+                setActiveView('view-yz');
+                updateCamera();
+            });
+
+            updateCamera();
+        }
+
+        function setActiveView(id) {
+            document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        function setupUI() {
+            // Control sliders
+            document.getElementById('ctrl-gravity').addEventListener('input', e => {
+                CONFIG.G = parseFloat(e.target.value);
+                document.getElementById('g-value').textContent = CONFIG.G.toFixed(2);
+            });
+
+            document.getElementById('ctrl-speed').addEventListener('input', e => {
+                CONFIG.DT_SCALE = parseFloat(e.target.value);
+                document.getElementById('dt-value').textContent = CONFIG.DT_SCALE.toFixed(2);
+            });
+
+            document.getElementById('ctrl-softening').addEventListener('input', e => {
+                CONFIG.SOFTENING = parseFloat(e.target.value);
+                document.getElementById('soft-value').textContent = CONFIG.SOFTENING.toFixed(2);
+            });
+
+            document.getElementById('ctrl-particles').addEventListener('input', e => {
+                const n = parseInt(e.target.value);
+                CONFIG.N_POSITIVE = Math.floor(n / 2);
+                CONFIG.N_NEGATIVE = Math.floor(n / 2);
+                document.getElementById('n-value').textContent = n;
+            });
+
+            // Toggle buttons
+            document.getElementById('toggle-forces').addEventListener('click', e => {
+                showForces = !showForces;
+                e.target.classList.toggle('active', showForces);
+                forceLineGroup.visible = showForces;
+            });
+
+            document.getElementById('toggle-velocity').addEventListener('click', e => {
+                showVelocity = !showVelocity;
+                e.target.classList.toggle('active', showVelocity);
+                velocityLineGroup.visible = showVelocity;
+            });
+
+            document.getElementById('toggle-trails').addEventListener('click', e => {
+                showTrails = !showTrails;
+                e.target.classList.toggle('active', showTrails);
+                trails.forEach(t => t.visible = showTrails);
+                if (!showTrails) {
+                    particles.forEach(p => p.trail = []);
+                }
+            });
+
+            document.getElementById('toggle-grid').addEventListener('click', e => {
+                showGrid = !showGrid;
+                e.target.classList.toggle('active', showGrid);
+                gridHelper.visible = showGrid;
+            });
+
+            document.getElementById('toggle-bounds').addEventListener('click', e => {
+                showBounds = !showBounds;
+                e.target.classList.toggle('active', showBounds);
+                boundsHelper.visible = showBounds;
+            });
+
+            // Action buttons
+            document.getElementById('btn-pause').addEventListener('click', e => {
+                isPaused = !isPaused;
+                e.target.textContent = isPaused ? '▶ PLAY' : '⏸ PAUSE';
+                e.target.classList.toggle('active', isPaused);
+                document.getElementById('status-dot').classList.toggle('paused', isPaused);
+                document.getElementById('status-text').textContent = isPaused ? 'PAUSED' : 'SIMULATION ACTIVE';
+            });
+
+            document.getElementById('btn-step').addEventListener('click', () => {
+                if (isPaused) {
+                    updatePhysics(1);
+                    updateStats();
+                }
+            });
+
+            document.getElementById('btn-reset').addEventListener('click', () => {
+                initParticles();
+            });
+
+            // Initial conditions
+            document.getElementById('ic-random').addEventListener('click', () => {
+                initialCondition = 'random';
+                setActiveIC('ic-random');
+            });
+
+            document.getElementById('ic-cluster').addEventListener('click', () => {
+                initialCondition = 'cluster';
+                setActiveIC('ic-cluster');
+            });
+
+            document.getElementById('ic-shell').addEventListener('click', () => {
+                initialCondition = 'shell';
+                setActiveIC('ic-shell');
+            });
+        }
+
+        function setActiveIC(id) {
+            document.querySelectorAll('.panel-section:last-child .toggle-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        // === RESIZE ===
+        function onResize() {
+            const width = getViewportWidth();
+            const height = getViewportHeight();
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height);
+        }
+
+        // === ANIMATION LOOP ===
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // FPS counter
+            frameCount++;
+            const now = performance.now();
+            if (now - lastFpsTime >= 1000) {
+                fps = frameCount;
+                frameCount = 0;
+                lastFpsTime = now;
+                document.getElementById('fps').textContent = fps;
+            }
+
+            // Update simulation time display
+            document.getElementById('sim-time').textContent = simulationTime.toFixed(3);
+
+            // Physics
+            updatePhysics(1);
+
+            // Stats update (throttled)
+            if (frameCount % 10 === 0) {
+                updateStats();
+            }
+
+            renderer.render(scene, camera);
+        }
+    </script>
+</body>
+</html>
