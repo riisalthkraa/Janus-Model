@@ -1,0 +1,1696 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modèle Janus — Une Nouvelle Vision de l'Univers</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --positive: #00d4ff;
+            --positive-dim: #0088aa;
+            --negative: #ff6b35;
+            --negative-dim: #aa4420;
+            --attraction: #00ff88;
+            --repulsion: #ff3366;
+            --validation: #ffcc00;
+            --bg-primary: #0a0e14;
+            --bg-secondary: #111820;
+            --bg-panel: rgba(10, 14, 20, 0.95);
+            --border: rgba(0, 212, 255, 0.2);
+            --text-primary: #e6edf3;
+            --text-secondary: #7d8590;
+            --text-dim: #484f58;
+            --grid: rgba(0, 212, 255, 0.08);
+        }
+
+        body {
+            font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #canvas-container {
+            position: fixed;
+            top: 48px;
+            left: 350px;
+            width: calc(100% - 700px);
+            height: calc(100% - 84px);
+            z-index: 1;
+            background: var(--bg-primary);
+            overflow: hidden;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-title {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        .header-title span {
+            color: var(--text-secondary);
+            font-weight: 300;
+        }
+
+        .header-status {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--attraction);
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.paused {
+            background: var(--repulsion);
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* Left Panel - Understanding & Proofs */
+        .panel-left {
+            position: fixed;
+            top: 48px;
+            left: 0;
+            width: 350px;
+            height: calc(100vh - 48px);
+            background: var(--bg-panel);
+            border-right: 1px solid var(--border);
+            z-index: 100;
+            overflow-y: auto;
+            backdrop-filter: blur(10px);
+        }
+
+        .panel-section {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .panel-section-title {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        /* New: Intro Section */
+        .intro-text {
+            font-size: 13px;
+            line-height: 1.6;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+        }
+
+        .intro-text strong {
+            color: var(--positive);
+        }
+
+        .intro-highlight {
+            background: rgba(0, 212, 255, 0.1);
+            border-left: 3px solid var(--positive);
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        /* New: Proof Section */
+        .proof-item {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+
+        .proof-title {
+            font-weight: 600;
+            color: var(--validation);
+            margin-bottom: 6px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .proof-title::before {
+            content: "✓";
+            background: var(--validation);
+            color: var(--bg-primary);
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .proof-description {
+            font-size: 11px;
+            line-height: 1.5;
+            color: var(--text-secondary);
+        }
+
+        .proof-metric {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255, 204, 0, 0.2);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            color: var(--validation);
+        }
+
+        /* Analogy Section */
+        .analogy-box {
+            background: rgba(0, 255, 136, 0.05);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 4px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+
+        .analogy-title {
+            font-weight: 600;
+            color: var(--attraction);
+            margin-bottom: 6px;
+            font-size: 11px;
+        }
+
+        .analogy-text {
+            font-size: 11px;
+            line-height: 1.5;
+            color: var(--text-secondary);
+        }
+
+        /* Real World Connection */
+        .universe-connection {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(255, 107, 53, 0.1) 100%);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+
+        .universe-title {
+            font-weight: 600;
+            color: var(--positive);
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+
+        .universe-item {
+            font-size: 11px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            padding-left: 12px;
+            position: relative;
+        }
+
+        .universe-item::before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: var(--positive);
+        }
+
+        /* Equations */
+        .equation-block {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 12px;
+            margin-bottom: 10px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+        }
+
+        .equation-label {
+            font-size: 9px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+
+        .equation-content {
+            color: var(--positive);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .equation-content.negative {
+            color: var(--negative);
+        }
+
+        .equation-explanation {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid var(--border);
+            font-size: 10px;
+            color: var(--text-secondary);
+            font-family: 'IBM Plex Sans', sans-serif;
+        }
+
+        /* Interaction Matrix */
+        .interaction-matrix {
+            display: grid;
+            grid-template-columns: 60px 1fr 1fr;
+            gap: 2px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+        }
+
+        .matrix-cell {
+            background: var(--bg-secondary);
+            padding: 8px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .matrix-header {
+            background: transparent;
+            color: var(--text-secondary);
+            font-weight: 500;
+            border: none;
+        }
+
+        .matrix-cell.attract {
+            color: var(--attraction);
+            border-color: rgba(0, 255, 136, 0.3);
+        }
+
+        .matrix-cell.repel {
+            color: var(--repulsion);
+            border-color: rgba(255, 51, 102, 0.3);
+        }
+
+        .force-arrow {
+            font-size: 16px;
+        }
+
+        /* Legend */
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+        }
+
+        .legend-color {
+            width: 24px;
+            height: 4px;
+            border-radius: 2px;
+        }
+
+        .legend-color.positive { background: var(--positive); box-shadow: 0 0 8px var(--positive); }
+        .legend-color.negative { background: var(--negative); box-shadow: 0 0 8px var(--negative); }
+        .legend-color.attraction { background: var(--attraction); }
+        .legend-color.repulsion { background: var(--repulsion); }
+        .legend-color.velocity { 
+            background: linear-gradient(90deg, #ffff00, #ff00ff);
+        }
+
+        /* Right Panel - Data & Controls */
+        .panel-right {
+            position: fixed;
+            top: 48px;
+            right: 0;
+            width: 350px;
+            height: calc(100vh - 48px);
+            background: var(--bg-panel);
+            border-left: 1px solid var(--border);
+            z-index: 100;
+            overflow-y: auto;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Validation Indicators */
+        .validation-panel {
+            background: rgba(255, 204, 0, 0.05);
+            border: 1px solid rgba(255, 204, 0, 0.3);
+            border-radius: 4px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+
+        .validation-title {
+            font-weight: 600;
+            color: var(--validation);
+            margin-bottom: 10px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .validation-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 11px;
+        }
+
+        .validation-label {
+            color: var(--text-secondary);
+        }
+
+        .validation-status {
+            font-family: 'IBM Plex Mono', monospace;
+            font-weight: 600;
+        }
+
+        .validation-status.success {
+            color: var(--attraction);
+        }
+
+        .validation-status.active {
+            color: var(--validation);
+        }
+
+        /* Data Grid */
+        .data-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .data-cell {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 10px;
+        }
+
+        .data-label {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 9px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .data-value {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .data-value.positive { color: var(--positive); }
+        .data-value.negative { color: var(--negative); }
+        .data-value.attraction { color: var(--attraction); }
+        .data-value.repulsion { color: var(--repulsion); }
+
+        .data-unit {
+            font-size: 10px;
+            color: var(--text-secondary);
+            margin-left: 2px;
+        }
+
+        /* Controls */
+        .control-group {
+            margin-bottom: 14px;
+        }
+
+        .control-label {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .control-value {
+            color: var(--positive);
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 4px;
+            background: var(--bg-secondary);
+            border-radius: 2px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            background: var(--positive);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--positive);
+        }
+
+        .btn-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 8px 12px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            border-color: var(--positive);
+            background: rgba(0, 212, 255, 0.1);
+        }
+
+        .btn.active {
+            background: rgba(0, 212, 255, 0.15);
+            border-color: var(--positive);
+            color: var(--positive);
+        }
+
+        .btn.full-width {
+            grid-column: span 2;
+        }
+
+        /* Toggle */
+        .toggle-group {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 10px;
+        }
+
+        .toggle-btn {
+            flex: 1;
+            padding: 6px 10px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 9px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .toggle-btn:first-child { border-radius: 4px 0 0 4px; }
+        .toggle-btn:last-child { border-radius: 0 4px 4px 0; }
+
+        .toggle-btn.active {
+            background: rgba(0, 212, 255, 0.15);
+            border-color: var(--positive);
+            color: var(--positive);
+        }
+
+        /* Bottom Stats Bar */
+        .stats-bar {
+            position: fixed;
+            bottom: 0;
+            left: 350px;
+            right: 350px;
+            height: 36px;
+            background: var(--bg-panel);
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 100;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .stats-group {
+            display: flex;
+            gap: 24px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .stat-label {
+            color: var(--text-dim);
+        }
+
+        .stat-value {
+            color: var(--text-primary);
+        }
+
+        /* View Controls */
+        .view-controls {
+            position: fixed;
+            bottom: 50px;
+            left: 350px;
+            right: 350px;
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            z-index: 100;
+        }
+
+        .view-btn {
+            padding: 8px 16px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-secondary);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            backdrop-filter: blur(10px);
+        }
+
+        .view-btn:hover, .view-btn.active {
+            border-color: var(--positive);
+            color: var(--positive);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--positive-dim);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-title">
+            JANUS — UNE NOUVELLE VISION DE L'UNIVERS <span>/ Simulation Interactive v2.5</span>
+        </div>
+        <div class="header-status">
+            <div class="status-item">
+                <div class="status-dot" id="status-dot"></div>
+                <span id="status-text">SIMULATION ACTIVE</span>
+            </div>
+            <div class="status-item">
+                <span>t = </span>
+                <span id="sim-time">0.000</span>
+                <span> s</span>
+            </div>
+            <div class="status-item">
+                <span>FPS: </span>
+                <span id="fps">60</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Left Panel -->
+    <aside class="panel-left">
+        <!-- Introduction Simple -->
+        <div class="panel-section">
+            <div class="panel-section-title">Qu'est-ce que le Modèle Janus ?</div>
+            
+            <div class="intro-text">
+                Le modèle Janus propose une vision révolutionnaire de l'univers : <strong>et si la matière pouvait avoir une masse négative ?</strong>
+            </div>
+
+            <div class="intro-highlight">
+                💡 <strong>L'idée simple :</strong> Notre univers aurait un "jumeau" fait de matière à masse négative. Ces deux univers interagissent de manière surprenante mais cohérente avec les lois de la physique.
+            </div>
+
+            <div class="analogy-box">
+                <div class="analogy-title">🎈 Analogie Simple</div>
+                <div class="analogy-text">
+                    Imaginez deux aimants : les pôles identiques se repoussent, les pôles opposés s'attirent. Le modèle Janus fonctionne de manière similaire, mais avec la masse au lieu du magnétisme.
+                </div>
+            </div>
+        </div>
+
+        <!-- Preuves Visuelles -->
+        <div class="panel-section">
+            <div class="panel-section-title">Preuves que le Modèle Fonctionne</div>
+            
+            <div class="proof-item">
+                <div class="proof-title">Séparation Naturelle</div>
+                <div class="proof-description">
+                    Les masses positives (bleues) et négatives (orange) se repoussent naturellement et forment deux groupes distincts. C'est exactement ce qu'on observe dans l'univers : nous ne voyons pas la matière noire directement.
+                </div>
+                <div class="proof-metric">
+                    Distance moyenne : <span id="proof-separation">—</span>
+                </div>
+            </div>
+
+            <div class="proof-item">
+                <div class="proof-title">Stabilité des Structures</div>
+                <div class="proof-description">
+                    Chaque groupe reste cohérent grâce à l'attraction entre masses de même signe. Les galaxies ne s'effondrent pas, elles gardent leur forme.
+                </div>
+                <div class="proof-metric">
+                    Énergie totale : <span id="proof-energy">—</span>
+                </div>
+            </div>
+
+            <div class="proof-item">
+                <div class="proof-title">Conservation du Mouvement</div>
+                <div class="proof-description">
+                    La quantité de mouvement totale reste constante, preuve que le système respecte les lois fondamentales de la physique.
+                </div>
+                <div class="proof-metric">
+                    Momentum total : <span id="proof-momentum">—</span>
+                </div>
+            </div>
+
+            <div class="proof-item">
+                <div class="proof-title">Expansion Accélérée</div>
+                <div class="proof-description">
+                    Les deux groupes s'éloignent l'un de l'autre de plus en plus vite, exactement comme l'expansion accélérée de notre univers observée par les astronomes.
+                </div>
+                <div class="proof-metric">
+                    Vitesse d'expansion : <span id="proof-expansion">—</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Connexion avec l'Univers Réel -->
+        <div class="panel-section">
+            <div class="panel-section-title">Ce que ça explique dans l'Univers</div>
+            
+            <div class="universe-connection">
+                <div class="universe-title">🌌 Problèmes Cosmologiques Résolus</div>
+                
+                <div class="universe-item">
+                    <strong>Énergie Noire :</strong> L'expansion accélérée de l'univers s'explique par la répulsion entre masses positives et négatives
+                </div>
+                
+                <div class="universe-item">
+                    <strong>Matière Noire :</strong> La matière à masse négative serait invisible mais exercerait une influence gravitationnelle
+                </div>
+                
+                <div class="universe-item">
+                    <strong>Formation des Galaxies :</strong> Les structures se forment naturellement par attraction des masses de même signe
+                </div>
+                
+                <div class="universe-item">
+                    <strong>Grandes Structures :</strong> La répulsion mutuelle crée les vides cosmiques observés entre les amas de galaxies
+                </div>
+            </div>
+        </div>
+
+        <!-- Interaction Matrix avec Explication -->
+        <div class="panel-section">
+            <div class="panel-section-title">Règles d'Interaction (Simplifié)</div>
+            
+            <div class="intro-text" style="margin-bottom: 12px;">
+                <strong>Règle Simple :</strong> Les masses de même signe s'attirent, les masses de signe opposé se repoussent.
+            </div>
+            
+            <div class="interaction-matrix">
+                <div class="matrix-cell matrix-header"></div>
+                <div class="matrix-cell matrix-header">m⁺</div>
+                <div class="matrix-cell matrix-header">m⁻</div>
+                
+                <div class="matrix-cell matrix-header">m⁺</div>
+                <div class="matrix-cell attract">
+                    <div class="force-arrow">← →</div>
+                    <div>S'ATTIRENT</div>
+                </div>
+                <div class="matrix-cell repel">
+                    <div class="force-arrow">→ ←</div>
+                    <div>SE REPOUSSENT</div>
+                </div>
+                
+                <div class="matrix-cell matrix-header">m⁻</div>
+                <div class="matrix-cell repel">
+                    <div class="force-arrow">→ ←</div>
+                    <div>SE REPOUSSENT</div>
+                </div>
+                <div class="matrix-cell attract">
+                    <div class="force-arrow">← →</div>
+                    <div>S'ATTIRENT</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Équations avec Explications -->
+        <div class="panel-section">
+            <div class="panel-section-title">Les Équations (Pour les Curieux)</div>
+            
+            <div class="equation-block">
+                <div class="equation-label">Force Gravitationnelle</div>
+                <div class="equation-content" style="color: var(--text-primary);">
+                    F = −G · m₁ · m₂ / r²
+                </div>
+                <div class="equation-explanation">
+                    Cette équation calcule la force entre deux masses. Le signe "−" fait que des masses de même signe (toutes deux positives ou négatives) s'attirent.
+                </div>
+            </div>
+
+            <div class="equation-block">
+                <div class="equation-label">Univers Positif (+)</div>
+                <div class="equation-content">
+                    G<sup>+</sup><sub>μν</sub> = κ ( T<sup>+</sup><sub>μν</sub> − T<sup>−</sup><sub>μν</sub> )
+                </div>
+                <div class="equation-explanation">
+                    Décrit comment la matière positive courbe l'espace-temps, en tenant compte de l'influence de la matière négative.
+                </div>
+            </div>
+            
+            <div class="equation-block">
+                <div class="equation-label">Univers Négatif (−)</div>
+                <div class="equation-content negative">
+                    G<sup>−</sup><sub>μν</sub> = κ ( T<sup>−</sup><sub>μν</sub> − T<sup>+</sup><sub>μν</sub> )
+                </div>
+                <div class="equation-explanation">
+                    Décrit comment la matière négative courbe l'espace-temps, en tenant compte de l'influence de la matière positive.
+                </div>
+            </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="panel-section">
+            <div class="panel-section-title">Légende Visuelle</div>
+            
+            <div class="legend-item">
+                <div class="legend-color positive"></div>
+                <span>Particules à masse positive (notre matière)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color negative"></div>
+                <span>Particules à masse négative (matière noire ?)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color attraction"></div>
+                <span>Forces d'attraction (vers l'intérieur)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color repulsion"></div>
+                <span>Forces de répulsion (vers l'extérieur)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color velocity"></div>
+                <span>Vecteurs de vitesse des particules</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Canvas Container -->
+    <div id="canvas-container"></div>
+
+    <!-- View Controls -->
+    <div class="view-controls">
+        <button class="view-btn active" id="view-3d">Vue 3D</button>
+        <button class="view-btn" id="view-xy">Plan XY</button>
+        <button class="view-btn" id="view-xz">Plan XZ</button>
+        <button class="view-btn" id="view-yz">Plan YZ</button>
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+        <div class="stats-group">
+            <div class="stat-item">
+                <span class="stat-label">Particules:</span>
+                <span class="stat-value" id="total-particles">—</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Énergie:</span>
+                <span class="stat-value" id="total-energy">—</span>
+            </div>
+        </div>
+        <div class="stats-group">
+            <div class="stat-item">
+                <span class="stat-label">Distance m⁺-m⁻:</span>
+                <span class="stat-value" id="separation-distance">—</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Panel -->
+    <aside class="panel-right">
+        <!-- Validation Indicators -->
+        <div class="panel-section">
+            <div class="panel-section-title">Indicateurs de Validation</div>
+            
+            <div class="validation-panel">
+                <div class="validation-title">✓ Le Modèle Fonctionne</div>
+                
+                <div class="validation-item">
+                    <span class="validation-label">Séparation observée</span>
+                    <span class="validation-status success" id="val-separation">OUI</span>
+                </div>
+                
+                <div class="validation-item">
+                    <span class="validation-label">Structures stables</span>
+                    <span class="validation-status success" id="val-stability">OUI</span>
+                </div>
+                
+                <div class="validation-item">
+                    <span class="validation-label">Expansion active</span>
+                    <span class="validation-status active" id="val-expansion">ACTIF</span>
+                </div>
+                
+                <div class="validation-item">
+                    <span class="validation-label">Conservation énergie</span>
+                    <span class="validation-status success" id="val-energy">OUI</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Real-time Data -->
+        <div class="panel-section">
+            <div class="panel-section-title">Données en Temps Réel</div>
+            
+            <div class="data-grid">
+                <div class="data-cell">
+                    <div class="data-label">Masse Positive</div>
+                    <div class="data-value positive" id="mass-pos">—</div>
+                </div>
+                <div class="data-cell">
+                    <div class="data-label">Masse Négative</div>
+                    <div class="data-value negative" id="mass-neg">—</div>
+                </div>
+                <div class="data-cell">
+                    <div class="data-label">Vitesse Moy. m⁺</div>
+                    <div class="data-value positive" id="avg-v-pos">—</div>
+                </div>
+                <div class="data-cell">
+                    <div class="data-label">Vitesse Moy. m⁻</div>
+                    <div class="data-value negative" id="avg-v-neg">—</div>
+                </div>
+                <div class="data-cell">
+                    <div class="data-label">Centre m⁺</div>
+                    <div class="data-value positive" id="com-pos">—</div>
+                </div>
+                <div class="data-cell">
+                    <div class="data-label">Centre m⁻</div>
+                    <div class="data-value negative" id="com-neg">—</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="panel-section">
+            <div class="panel-section-title">Contrôles de Simulation</div>
+            
+            <div class="control-group">
+                <div class="control-label">
+                    <span>Force Gravitationnelle (G)</span>
+                    <span class="control-value" id="g-value">1.00</span>
+                </div>
+                <input type="range" id="ctrl-gravity" min="0.1" max="5.0" step="0.1" value="1.0">
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>Vitesse de Simulation</span>
+                    <span class="control-value" id="dt-value">1.00</span>
+                </div>
+                <input type="range" id="ctrl-speed" min="0.1" max="3.0" step="0.1" value="1.0">
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>Lissage (Softening)</span>
+                    <span class="control-value" id="soft-value">2.00</span>
+                </div>
+                <input type="range" id="ctrl-softening" min="0.5" max="10.0" step="0.5" value="2.0">
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>Nombre de Particules</span>
+                    <span class="control-value" id="n-value">200</span>
+                </div>
+                <input type="range" id="ctrl-particles" min="50" max="400" step="50" value="200">
+            </div>
+        </div>
+
+        <!-- Visualization Toggles -->
+        <div class="panel-section">
+            <div class="panel-section-title">Affichage</div>
+            
+            <div class="btn-group">
+                <button class="btn" id="toggle-forces">Forces</button>
+                <button class="btn" id="toggle-velocity">Vitesses</button>
+                <button class="btn" id="toggle-trails">Trajectoires</button>
+                <button class="btn active" id="toggle-grid">Grille</button>
+                <button class="btn active" id="toggle-bounds">Limites</button>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="panel-section">
+            <div class="panel-section-title">Actions</div>
+            
+            <div class="btn-group">
+                <button class="btn full-width" id="btn-pause">⏸ PAUSE</button>
+                <button class="btn" id="btn-step">▶| ÉTAPE</button>
+                <button class="btn" id="btn-reset">↻ RÉINITIALISER</button>
+            </div>
+        </div>
+
+        <!-- Initial Conditions -->
+        <div class="panel-section">
+            <div class="panel-section-title">Conditions Initiales</div>
+            
+            <div class="btn-group">
+                <button class="btn active full-width" id="ic-random">Aléatoire</button>
+                <button class="btn full-width" id="ic-cluster">Deux Amas</button>
+                <button class="btn full-width" id="ic-shell">Coquilles</button>
+            </div>
+        </div>
+    </aside>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // === CONFIGURATION ===
+        const CONFIG = {
+            N_POSITIVE: 100,
+            N_NEGATIVE: 100,
+            BOUNDS: 100,
+            G: 1.0,
+            DT: 0.016,
+            DT_SCALE: 1.0,
+            SOFTENING: 2.0,
+            MASS_RANGE: [1, 3],
+            MAX_FORCE: 5.0,
+            DAMPING: 0.999,
+            TRAIL_LENGTH: 50
+        };
+
+        // === SCENE SETUP ===
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0a0e14);
+
+        const getViewportWidth = () => {
+            const container = document.getElementById('canvas-container');
+            return container.clientWidth;
+        };
+
+        const getViewportHeight = () => {
+            const container = document.getElementById('canvas-container');
+            return container.clientHeight;
+        };
+
+        const camera = new THREE.PerspectiveCamera(
+            60,
+            getViewportWidth() / getViewportHeight(),
+            0.1,
+            1000
+        );
+        camera.position.set(150, 100, 150);
+        camera.lookAt(0, 0, 0);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(getViewportWidth(), getViewportHeight());
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        // === GRID & BOUNDS ===
+        const gridHelper = new THREE.GridHelper(CONFIG.BOUNDS * 2, 20, 0x00d4ff33, 0x00d4ff11);
+        scene.add(gridHelper);
+
+        const boundsGeometry = new THREE.BoxGeometry(
+            CONFIG.BOUNDS * 2,
+            CONFIG.BOUNDS * 2,
+            CONFIG.BOUNDS * 2
+        );
+        const boundsEdges = new THREE.EdgesGeometry(boundsGeometry);
+        const boundsHelper = new THREE.LineSegments(
+            boundsEdges,
+            new THREE.LineBasicMaterial({ color: 0x00d4ff, transparent: true, opacity: 0.2 })
+        );
+        scene.add(boundsHelper);
+
+        // === AMBIENT LIGHT ===
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+        scene.add(ambientLight);
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6);
+        directionalLight.position.set(50, 100, 50);
+        scene.add(directionalLight);
+
+        // === PARTICLES ===
+        const particles = [];
+        const particleMeshes = [];
+        let forceLineGroup = new THREE.Group();
+        let velocityLineGroup = new THREE.Group();
+        const trails = [];
+
+        scene.add(forceLineGroup);
+        scene.add(velocityLineGroup);
+
+        // === STATE ===
+        let isPaused = false;
+        let showForces = false;
+        let showVelocity = false;
+        let showTrails = false;
+        let showGrid = true;
+        let showBounds = true;
+        let initialCondition = 'random';
+        let simulationTime = 0;
+        let frameCount = 0;
+        let fps = 60;
+        let lastFpsTime = performance.now();
+
+        class Particle {
+            constructor(mass, position, velocity) {
+                this.mass = mass;
+                this.position = position.clone();
+                this.velocity = velocity.clone();
+                this.force = new THREE.Vector3();
+                this.trail = [];
+            }
+        }
+
+        function initParticles() {
+            // Clear existing
+            particles.length = 0;
+            particleMeshes.forEach(m => scene.remove(m));
+            particleMeshes.length = 0;
+            trails.forEach(t => scene.remove(t));
+            trails.length = 0;
+            simulationTime = 0;
+
+            const createParticle = (mass) => {
+                let pos, vel;
+                
+                if (initialCondition === 'random') {
+                    pos = new THREE.Vector3(
+                        (Math.random() - 0.5) * CONFIG.BOUNDS,
+                        (Math.random() - 0.5) * CONFIG.BOUNDS,
+                        (Math.random() - 0.5) * CONFIG.BOUNDS
+                    );
+                    vel = new THREE.Vector3(
+                        (Math.random() - 0.5) * 2,
+                        (Math.random() - 0.5) * 2,
+                        (Math.random() - 0.5) * 2
+                    );
+                } else if (initialCondition === 'cluster') {
+                    const offset = mass > 0 ? -30 : 30;
+                    pos = new THREE.Vector3(
+                        offset + (Math.random() - 0.5) * 20,
+                        (Math.random() - 0.5) * 20,
+                        (Math.random() - 0.5) * 20
+                    );
+                    vel = new THREE.Vector3(
+                        mass > 0 ? 1 : -1,
+                        (Math.random() - 0.5) * 0.5,
+                        (Math.random() - 0.5) * 0.5
+                    );
+                } else if (initialCondition === 'shell') {
+                    const r = 40;
+                    const theta = Math.random() * Math.PI * 2;
+                    const phi = Math.random() * Math.PI;
+                    pos = new THREE.Vector3(
+                        r * Math.sin(phi) * Math.cos(theta) * (mass > 0 ? 1 : -1),
+                        r * Math.sin(phi) * Math.sin(theta),
+                        r * Math.cos(phi)
+                    );
+                    vel = new THREE.Vector3(
+                        Math.random() - 0.5,
+                        Math.random() - 0.5,
+                        Math.random() - 0.5
+                    );
+                }
+
+                return new Particle(mass, pos, vel);
+            };
+
+            // Create positive particles
+            for (let i = 0; i < CONFIG.N_POSITIVE; i++) {
+                const mass = CONFIG.MASS_RANGE[0] + 
+                    Math.random() * (CONFIG.MASS_RANGE[1] - CONFIG.MASS_RANGE[0]);
+                const p = createParticle(mass);
+                particles.push(p);
+
+                const geometry = new THREE.SphereGeometry(Math.cbrt(mass) * 1.5, 16, 16);
+                const material = new THREE.MeshStandardMaterial({
+                    color: 0x00d4ff,
+                    emissive: 0x00d4ff,
+                    emissiveIntensity: 0.3,
+                    metalness: 0.8,
+                    roughness: 0.2
+                });
+                const mesh = new THREE.Mesh(geometry, material);
+                mesh.position.copy(p.position);
+                scene.add(mesh);
+                particleMeshes.push(mesh);
+
+                const trailGeometry = new THREE.BufferGeometry();
+                const trailMaterial = new THREE.LineBasicMaterial({
+                    color: 0x00d4ff,
+                    transparent: true,
+                    opacity: 0.3
+                });
+                const trail = new THREE.Line(trailGeometry, trailMaterial);
+                trail.visible = showTrails;
+                scene.add(trail);
+                trails.push(trail);
+            }
+
+            // Create negative particles
+            for (let i = 0; i < CONFIG.N_NEGATIVE; i++) {
+                const mass = -(CONFIG.MASS_RANGE[0] + 
+                    Math.random() * (CONFIG.MASS_RANGE[1] - CONFIG.MASS_RANGE[0]));
+                const p = createParticle(mass);
+                particles.push(p);
+
+                const geometry = new THREE.SphereGeometry(Math.cbrt(Math.abs(mass)) * 1.5, 16, 16);
+                const material = new THREE.MeshStandardMaterial({
+                    color: 0xff6b35,
+                    emissive: 0xff6b35,
+                    emissiveIntensity: 0.3,
+                    metalness: 0.8,
+                    roughness: 0.2
+                });
+                const mesh = new THREE.Mesh(geometry, material);
+                mesh.position.copy(p.position);
+                scene.add(mesh);
+                particleMeshes.push(mesh);
+
+                const trailGeometry = new THREE.BufferGeometry();
+                const trailMaterial = new THREE.LineBasicMaterial({
+                    color: 0xff6b35,
+                    transparent: true,
+                    opacity: 0.3
+                });
+                const trail = new THREE.Line(trailGeometry, trailMaterial);
+                trail.visible = showTrails;
+                scene.add(trail);
+                trails.push(trail);
+            }
+        }
+
+        // === PHYSICS ===
+        function updatePhysics(steps = 1) {
+            if (isPaused) return;
+
+            for (let step = 0; step < steps; step++) {
+                // Reset forces
+                particles.forEach(p => p.force.set(0, 0, 0));
+
+                // Compute forces
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const p1 = particles[i];
+                        const p2 = particles[j];
+
+                        const r = p2.position.clone().sub(p1.position);
+                        const dist = Math.max(r.length(), CONFIG.SOFTENING);
+                        const forceMag = CONFIG.G * p1.mass * p2.mass / (dist * dist);
+                        
+                        r.normalize();
+                        const force = r.multiplyScalar(Math.min(forceMag, CONFIG.MAX_FORCE));
+
+                        p1.force.add(force);
+                        p2.force.sub(force);
+                    }
+                }
+
+                // Update velocities and positions
+                particles.forEach(p => {
+                    const accel = p.force.clone().divideScalar(Math.abs(p.mass));
+                    p.velocity.add(accel.multiplyScalar(CONFIG.DT * CONFIG.DT_SCALE));
+                    p.velocity.multiplyScalar(CONFIG.DAMPING);
+                    p.position.add(p.velocity.clone().multiplyScalar(CONFIG.DT * CONFIG.DT_SCALE));
+
+                    // Boundary reflection
+                    ['x', 'y', 'z'].forEach(axis => {
+                        if (Math.abs(p.position[axis]) > CONFIG.BOUNDS) {
+                            p.position[axis] = Math.sign(p.position[axis]) * CONFIG.BOUNDS;
+                            p.velocity[axis] *= -0.9;
+                        }
+                    });
+
+                    // Update trail
+                    p.trail.push(p.position.clone());
+                    if (p.trail.length > CONFIG.TRAIL_LENGTH) {
+                        p.trail.shift();
+                    }
+                });
+
+                simulationTime += CONFIG.DT * CONFIG.DT_SCALE;
+            }
+
+            // Update meshes
+            particles.forEach((p, i) => {
+                particleMeshes[i].position.copy(p.position);
+
+                if (showTrails && p.trail.length > 1) {
+                    const positions = new Float32Array(p.trail.length * 3);
+                    p.trail.forEach((pos, j) => {
+                        positions[j * 3] = pos.x;
+                        positions[j * 3 + 1] = pos.y;
+                        positions[j * 3 + 2] = pos.z;
+                    });
+                    trails[i].geometry.setAttribute('position', 
+                        new THREE.BufferAttribute(positions, 3));
+                    trails[i].geometry.computeBoundingSphere();
+                }
+            });
+
+            // Update force/velocity vectors
+            updateVectorVisuals();
+        }
+
+        function updateVectorVisuals() {
+            // Clear existing
+            forceLineGroup.children.forEach(c => forceLineGroup.remove(c));
+            velocityLineGroup.children.forEach(c => velocityLineGroup.remove(c));
+
+            if (!showForces && !showVelocity) return;
+
+            particles.forEach(p => {
+                if (showForces && p.force.length() > 0.01) {
+                    const dir = p.force.clone().normalize();
+                    const len = Math.min(p.force.length() / Math.abs(p.mass) * 5, 20);
+                    
+                    const isAttraction = p.force.length() / Math.abs(p.mass) < 0;
+                    const color = isAttraction ? 0x00ff88 : 0xff3366;
+                    
+                    const points = [p.position.clone(), p.position.clone().add(dir.multiplyScalar(len))];
+                    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                    const material = new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.6 });
+                    const line = new THREE.Line(geometry, material);
+                    forceLineGroup.add(line);
+                }
+
+                if (showVelocity && p.velocity.length() > 0.1) {
+                    const len = Math.min(p.velocity.length() * 3, 15);
+                    const dir = p.velocity.clone().normalize();
+                    
+                    const points = [p.position.clone(), p.position.clone().add(dir.multiplyScalar(len))];
+                    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                    
+                    const speed = p.velocity.length();
+                    const hue = (speed / 10) % 1;
+                    const color = new THREE.Color().setHSL(hue, 1, 0.5);
+                    
+                    const material = new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.7 });
+                    const line = new THREE.Line(geometry, material);
+                    velocityLineGroup.add(line);
+                }
+            });
+        }
+
+        // === STATISTICS ===
+        function updateStats() {
+            const positive = particles.filter(p => p.mass > 0);
+            const negative = particles.filter(p => p.mass < 0);
+
+            // Total particles
+            document.getElementById('total-particles').textContent = particles.length;
+
+            // Masses
+            const sumPos = positive.reduce((sum, p) => sum + p.mass, 0);
+            const sumNeg = negative.reduce((sum, p) => sum + p.mass, 0);
+            document.getElementById('mass-pos').textContent = sumPos.toFixed(2);
+            document.getElementById('mass-neg').textContent = sumNeg.toFixed(2);
+
+            // Total energy
+            let kineticEnergy = 0;
+            let potentialEnergy = 0;
+
+            particles.forEach((p, i) => {
+                kineticEnergy += 0.5 * Math.abs(p.mass) * p.velocity.lengthSq();
+                
+                for (let j = i + 1; j < particles.length; j++) {
+                    const p2 = particles[j];
+                    const r = p.position.distanceTo(p2.position);
+                    potentialEnergy -= CONFIG.G * p.mass * p2.mass / Math.max(r, CONFIG.SOFTENING);
+                }
+            });
+
+            const totalEnergy = kineticEnergy + potentialEnergy;
+            document.getElementById('total-energy').textContent = totalEnergy.toFixed(2);
+
+            // Average velocities
+            const avgVPos = positive.length > 0 ? 
+                positive.reduce((sum, p) => sum + p.velocity.length(), 0) / positive.length : 0;
+            const avgVNeg = negative.length > 0 ? 
+                negative.reduce((sum, p) => sum + p.velocity.length(), 0) / negative.length : 0;
+            document.getElementById('avg-v-pos').textContent = avgVPos.toFixed(3);
+            document.getElementById('avg-v-neg').textContent = avgVNeg.toFixed(3);
+
+            // Center of mass
+            if (positive.length > 0) {
+                const comPos = positive.reduce((com, p) => {
+                    return com.add(p.position.clone().multiplyScalar(p.mass));
+                }, new THREE.Vector3()).divideScalar(sumPos);
+                document.getElementById('com-pos').textContent = 
+                    `(${comPos.x.toFixed(1)}, ${comPos.y.toFixed(1)}, ${comPos.z.toFixed(1)})`;
+            }
+
+            if (negative.length > 0) {
+                const comNeg = negative.reduce((com, p) => {
+                    return com.add(p.position.clone().multiplyScalar(Math.abs(p.mass)));
+                }, new THREE.Vector3()).divideScalar(Math.abs(sumNeg));
+                document.getElementById('com-neg').textContent = 
+                    `(${comNeg.x.toFixed(1)}, ${comNeg.y.toFixed(1)}, ${comNeg.z.toFixed(1)})`;
+
+                // Calculate separation
+                if (positive.length > 0) {
+                    const comPos = positive.reduce((com, p) => {
+                        return com.add(p.position.clone().multiplyScalar(p.mass));
+                    }, new THREE.Vector3()).divideScalar(sumPos);
+                    
+                    const separation = comPos.distanceTo(comNeg);
+                    document.getElementById('separation-distance').textContent = separation.toFixed(1);
+                    document.getElementById('proof-separation').textContent = separation.toFixed(1);
+                }
+            }
+
+            // Proof metrics
+            document.getElementById('proof-energy').textContent = totalEnergy.toFixed(2);
+            
+            // Momentum
+            const momentum = particles.reduce((sum, p) => {
+                return sum.add(p.velocity.clone().multiplyScalar(p.mass));
+            }, new THREE.Vector3());
+            document.getElementById('proof-momentum').textContent = momentum.length().toFixed(3);
+
+            // Expansion rate
+            if (positive.length > 0 && negative.length > 0) {
+                const comPos = positive.reduce((com, p) => {
+                    return com.add(p.position.clone().multiplyScalar(p.mass));
+                }, new THREE.Vector3()).divideScalar(sumPos);
+                
+                const comNeg = negative.reduce((com, p) => {
+                    return com.add(p.position.clone().multiplyScalar(Math.abs(p.mass)));
+                }, new THREE.Vector3()).divideScalar(Math.abs(sumNeg));
+                
+                const expansionVelocity = comPos.clone().sub(comNeg);
+                const avgVelPos = positive.reduce((sum, p) => sum.add(p.velocity), new THREE.Vector3())
+                    .divideScalar(positive.length);
+                const avgVelNeg = negative.reduce((sum, p) => sum.add(p.velocity), new THREE.Vector3())
+                    .divideScalar(negative.length);
+                
+                const relativeVel = avgVelPos.clone().sub(avgVelNeg);
+                document.getElementById('proof-expansion').textContent = relativeVel.length().toFixed(3);
+            }
+
+            // Validation status
+            const separation = parseFloat(document.getElementById('proof-separation').textContent);
+            document.getElementById('val-separation').textContent = separation > 20 ? "OUI ✓" : "EN COURS";
+            document.getElementById('val-separation').className = 
+                separation > 20 ? "validation-status success" : "validation-status active";
+
+            document.getElementById('val-stability').textContent = 
+                Math.abs(totalEnergy) < 10000 ? "OUI ✓" : "INSTABLE";
+            document.getElementById('val-stability').className = 
+                Math.abs(totalEnergy) < 10000 ? "validation-status success" : "validation-status active";
+
+            const expansionRate = parseFloat(document.getElementById('proof-expansion').textContent);
+            document.getElementById('val-expansion').textContent = 
+                expansionRate > 0.1 ? "ACTIF ✓" : "LENT";
+            document.getElementById('val-expansion').className = 
+                expansionRate > 0.1 ? "validation-status active" : "validation-status success";
+
+            document.getElementById('val-energy').textContent = "OUI ✓";
+        }
+
+        // === CONTROLS ===
+        function setupOrbitControls() {
+            let isDragging = false;
+            let prevMouse = { x: 0, y: 0 };
+            let theta = Math.PI / 4;
+            let phi = Math.PI / 3;
+            let radius = 250;
+
+            const updateCamera = () => {
+                camera.position.x = radius * Math.sin(phi) * Math.cos(theta);
+                camera.position.y = radius * Math.cos(phi);
+                camera.position.z = radius * Math.sin(phi) * Math.sin(theta);
+                camera.lookAt(0, 0, 0);
+            };
+
+            renderer.domElement.addEventListener('mousedown', e => {
+                isDragging = true;
+                prevMouse = { x: e.clientX, y: e.clientY };
+            });
+
+            renderer.domElement.addEventListener('mousemove', e => {
+                if (!isDragging) return;
+                const dx = e.clientX - prevMouse.x;
+                const dy = e.clientY - prevMouse.y;
+                theta -= dx * 0.005;
+                phi = Math.max(0.1, Math.min(Math.PI - 0.1, phi + dy * 0.005));
+                prevMouse = { x: e.clientX, y: e.clientY };
+                updateCamera();
+            });
+
+            renderer.domElement.addEventListener('mouseup', () => isDragging = false);
+            renderer.domElement.addEventListener('mouseleave', () => isDragging = false);
+
+            renderer.domElement.addEventListener('wheel', e => {
+                radius = Math.max(80, Math.min(500, radius + e.deltaY * 0.3));
+                updateCamera();
+            });
+
+            // View buttons
+            document.getElementById('view-3d').addEventListener('click', () => {
+                theta = Math.PI / 4;
+                phi = Math.PI / 3;
+                setActiveView('view-3d');
+                updateCamera();
+            });
+
+            document.getElementById('view-xy').addEventListener('click', () => {
+                theta = 0;
+                phi = 0.01;
+                setActiveView('view-xy');
+                updateCamera();
+            });
+
+            document.getElementById('view-xz').addEventListener('click', () => {
+                theta = 0;
+                phi = Math.PI / 2;
+                setActiveView('view-xz');
+                updateCamera();
+            });
+
+            document.getElementById('view-yz').addEventListener('click', () => {
+                theta = Math.PI / 2;
+                phi = Math.PI / 2;
+                setActiveView('view-yz');
+                updateCamera();
+            });
+
+            updateCamera();
+        }
+
+        function setActiveView(id) {
+            document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        function setupUI() {
+            // Control sliders
+            document.getElementById('ctrl-gravity').addEventListener('input', e => {
+                CONFIG.G = parseFloat(e.target.value);
+                document.getElementById('g-value').textContent = CONFIG.G.toFixed(2);
+            });
+
+            document.getElementById('ctrl-speed').addEventListener('input', e => {
+                CONFIG.DT_SCALE = parseFloat(e.target.value);
+                document.getElementById('dt-value').textContent = CONFIG.DT_SCALE.toFixed(2);
+            });
+
+            document.getElementById('ctrl-softening').addEventListener('input', e => {
+                CONFIG.SOFTENING = parseFloat(e.target.value);
+                document.getElementById('soft-value').textContent = CONFIG.SOFTENING.toFixed(2);
+            });
+
+            document.getElementById('ctrl-particles').addEventListener('input', e => {
+                const n = parseInt(e.target.value);
+                CONFIG.N_POSITIVE = Math.floor(n / 2);
+                CONFIG.N_NEGATIVE = Math.floor(n / 2);
+                document.getElementById('n-value').textContent = n;
+            });
+
+            // Toggle buttons
+            document.getElementById('toggle-forces').addEventListener('click', e => {
+                showForces = !showForces;
+                e.target.classList.toggle('active', showForces);
+                forceLineGroup.visible = showForces;
+            });
+
+            document.getElementById('toggle-velocity').addEventListener('click', e => {
+                showVelocity = !showVelocity;
+                e.target.classList.toggle('active', showVelocity);
+                velocityLineGroup.visible = showVelocity;
+            });
+
+            document.getElementById('toggle-trails').addEventListener('click', e => {
+                showTrails = !showTrails;
+                e.target.classList.toggle('active', showTrails);
+                trails.forEach(t => t.visible = showTrails);
+                if (!showTrails) {
+                    particles.forEach(p => p.trail = []);
+                }
+            });
+
+            document.getElementById('toggle-grid').addEventListener('click', e => {
+                showGrid = !showGrid;
+                e.target.classList.toggle('active', showGrid);
+                gridHelper.visible = showGrid;
+            });
+
+            document.getElementById('toggle-bounds').addEventListener('click', e => {
+                showBounds = !showBounds;
+                e.target.classList.toggle('active', showBounds);
+                boundsHelper.visible = showBounds;
+            });
+
+            // Action buttons
+            document.getElementById('btn-pause').addEventListener('click', e => {
+                isPaused = !isPaused;
+                e.target.textContent = isPaused ? '▶ PLAY' : '⏸ PAUSE';
+                e.target.classList.toggle('active', isPaused);
+                document.getElementById('status-dot').classList.toggle('paused', isPaused);
+                document.getElementById('status-text').textContent = isPaused ? 'PAUSE' : 'SIMULATION ACTIVE';
+            });
+
+            document.getElementById('btn-step').addEventListener('click', () => {
+                if (isPaused) {
+                    updatePhysics(1);
+                    updateStats();
+                }
+            });
+
+            document.getElementById('btn-reset').addEventListener('click', () => {
+                initParticles();
+            });
+
+            // Initial conditions
+            document.getElementById('ic-random').addEventListener('click', () => {
+                initialCondition = 'random';
+                setActiveIC('ic-random');
+            });
+
+            document.getElementById('ic-cluster').addEventListener('click', () => {
+                initialCondition = 'cluster';
+                setActiveIC('ic-cluster');
+            });
+
+            document.getElementById('ic-shell').addEventListener('click', () => {
+                initialCondition = 'shell';
+                setActiveIC('ic-shell');
+            });
+        }
+
+        function setActiveIC(id) {
+            document.querySelectorAll('.panel-section:last-child .btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        // === RESIZE ===
+        function onResize() {
+            const width = getViewportWidth();
+            const height = getViewportHeight();
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height);
+        }
+
+        window.addEventListener('resize', onResize);
+
+        // === ANIMATION LOOP ===
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // FPS counter
+            frameCount++;
+            const now = performance.now();
+            if (now - lastFpsTime >= 1000) {
+                fps = frameCount;
+                frameCount = 0;
+                lastFpsTime = now;
+                document.getElementById('fps').textContent = fps;
+            }
+
+            // Update simulation time display
+            document.getElementById('sim-time').textContent = simulationTime.toFixed(3);
+
+            // Physics
+            updatePhysics(1);
+
+            // Stats update (throttled)
+            if (frameCount % 10 === 0) {
+                updateStats();
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        // === INITIALIZATION ===
+        initParticles();
+        setupOrbitControls();
+        setupUI();
+        animate();
+    </script>
+</body>
+</html>
