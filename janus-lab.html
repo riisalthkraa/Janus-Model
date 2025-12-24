@@ -1,0 +1,2297 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JANUS Lab — Simulateur Cosmologique de Recherche</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --pos: #00b4d8;
+            --pos-dim: #006d83;
+            --neg: #ff6b35;
+            --neg-dim: #993d1f;
+            --star: #fff8e7;
+            --hot: #aaccff;
+            --cold: #ffaa77;
+            --black-hole: #1a0a20;
+            --attract: #00ff88;
+            --repel: #ff2266;
+            --bg: #000008;
+            --panel: rgba(8, 10, 18, 0.97);
+            --card: rgba(15, 20, 30, 0.95);
+            --border: rgba(0, 180, 216, 0.15);
+            --text: #e8ecf4;
+            --dim: #5a6270;
+            --accent: #ffd700;
+            --success: #00ff88;
+            --warning: #ffaa00;
+            --danger: #ff4466;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            z-index: 1;
+        }
+
+        /* Panels */
+        .panel {
+            position: fixed;
+            top: 0;
+            height: 100vh;
+            background: var(--panel);
+            z-index: 100;
+            overflow-y: auto;
+            backdrop-filter: blur(20px);
+        }
+
+        .panel-left {
+            left: 0;
+            width: 380px;
+            border-right: 1px solid var(--border);
+        }
+
+        .panel-right {
+            right: 0;
+            width: 400px;
+            border-left: 1px solid var(--border);
+        }
+
+        .panel::-webkit-scrollbar { width: 3px; }
+        .panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+        /* Header */
+        .header {
+            padding: 20px;
+            background: linear-gradient(180deg, rgba(0,180,216,0.1) 0%, transparent 100%);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--pos), var(--neg));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 20px rgba(0, 180, 216, 0.3);
+        }
+
+        .logo-text .title {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+
+        .logo-text .subtitle {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px;
+            color: var(--dim);
+            letter-spacing: 1px;
+        }
+
+        .version-badge {
+            margin-left: auto;
+            padding: 4px 10px;
+            background: rgba(255, 215, 0, 0.15);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px;
+            color: var(--accent);
+        }
+
+        /* Section */
+        .section {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--dim);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: var(--pos);
+            border-radius: 2px;
+        }
+
+        /* Constants Grid */
+        .constants-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .constant-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        .constant-symbol {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .constant-name {
+            font-size: 9px;
+            color: var(--dim);
+            margin-top: 2px;
+        }
+
+        .constant-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--text);
+            margin-top: 4px;
+        }
+
+        /* Object Types */
+        .object-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+        }
+
+        .object-btn {
+            padding: 10px 8px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 9px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .object-btn:hover {
+            border-color: var(--pos);
+            background: rgba(0, 180, 216, 0.1);
+        }
+
+        .object-btn.active {
+            border-color: var(--pos);
+            background: rgba(0, 180, 216, 0.2);
+            box-shadow: 0 0 15px rgba(0, 180, 216, 0.2);
+        }
+
+        .object-btn .icon {
+            font-size: 20px;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        /* Scenarios */
+        .scenario-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .scenario-btn {
+            padding: 12px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+        }
+
+        .scenario-btn:hover {
+            border-color: var(--pos);
+            transform: translateY(-2px);
+        }
+
+        .scenario-btn.active {
+            border-color: var(--pos);
+            background: linear-gradient(135deg, rgba(0,180,216,0.15), rgba(0,180,216,0.05));
+            box-shadow: 0 4px 20px rgba(0, 180, 216, 0.2);
+        }
+
+        .scenario-btn .name {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .scenario-btn .desc {
+            font-size: 9px;
+            color: var(--dim);
+            margin-top: 4px;
+        }
+
+        .scenario-btn.full { grid-column: span 2; }
+
+        /* Controls */
+        .control-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .control-label {
+            font-size: 11px;
+            color: var(--dim);
+            min-width: 90px;
+        }
+
+        .control-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--pos);
+            min-width: 55px;
+            text-align: right;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            -webkit-appearance: none;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            background: var(--pos);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 8px var(--pos);
+        }
+
+        .btn-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+        }
+
+        .btn {
+            padding: 10px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .btn:hover { border-color: var(--pos); }
+        .btn.active { background: rgba(0, 180, 216, 0.2); border-color: var(--pos); color: var(--pos); }
+        .btn.primary { background: linear-gradient(135deg, rgba(0,180,216,0.3), rgba(0,180,216,0.1)); border-color: var(--pos); }
+        .btn.success { background: rgba(0,255,136,0.15); border-color: var(--success); color: var(--success); }
+        .btn.warning { background: rgba(255,170,0,0.15); border-color: var(--warning); color: var(--warning); }
+        .btn.full { grid-column: span 2; }
+
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+        }
+
+        .stat-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 8px;
+            color: var(--dim);
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        .stat-value.pos { color: var(--pos); }
+        .stat-value.neg { color: var(--neg); }
+        .stat-value.accent { color: var(--accent); }
+        .stat-value.success { color: var(--success); }
+        .stat-value.warning { color: var(--warning); }
+
+        /* Discovery Mode */
+        .discovery-panel {
+            background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,170,0,0.05));
+            border: 1px solid rgba(255,215,0,0.3);
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+
+        .discovery-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .discovery-status {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--dim);
+        }
+
+        .discovery-status.active {
+            background: var(--success);
+            box-shadow: 0 0 10px var(--success);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .discovery-title {
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .discovery-time {
+            margin-left: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--accent);
+        }
+
+        .discovery-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .discovery-stat {
+            text-align: center;
+        }
+
+        .discovery-stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .discovery-stat-label {
+            font-size: 8px;
+            color: var(--dim);
+            text-transform: uppercase;
+        }
+
+        /* Phenomena Log */
+        .phenomena-log {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .phenomenon-item {
+            display: flex;
+            gap: 10px;
+            padding: 10px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 6px;
+            margin-bottom: 6px;
+            border-left: 3px solid var(--pos);
+        }
+
+        .phenomenon-item.rare { border-left-color: var(--accent); }
+        .phenomenon-item.critical { border-left-color: var(--danger); }
+
+        .phenomenon-icon { font-size: 18px; }
+
+        .phenomenon-info { flex: 1; }
+
+        .phenomenon-name {
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .phenomenon-time {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px;
+            color: var(--dim);
+        }
+
+        .phenomenon-desc {
+            font-size: 9px;
+            color: var(--dim);
+            margin-top: 2px;
+        }
+
+        /* Charts */
+        .chart-container {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+
+        .chart-title {
+            font-size: 10px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .chart-canvas {
+            width: 100%;
+            height: 80px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 4px;
+        }
+
+        /* Info Bar */
+        .info-bar {
+            position: fixed;
+            top: 16px;
+            left: 400px;
+            right: 420px;
+            padding: 12px 20px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .info-item { text-align: center; }
+
+        .info-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 8px;
+            color: var(--dim);
+            text-transform: uppercase;
+        }
+
+        .info-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--pos);
+        }
+
+        /* Scale Bar */
+        .scale-bar {
+            position: fixed;
+            bottom: 20px;
+            left: 400px;
+            padding: 10px 16px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .scale-line {
+            width: 100px;
+            height: 2px;
+            background: var(--text);
+            position: relative;
+        }
+
+        .scale-line::before, .scale-line::after {
+            content: '';
+            position: absolute;
+            width: 2px;
+            height: 8px;
+            background: var(--text);
+            top: -3px;
+        }
+
+        .scale-line::before { left: 0; }
+        .scale-line::after { right: 0; }
+
+        .scale-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text);
+        }
+
+        /* Legend */
+        .legend {
+            position: fixed;
+            bottom: 20px;
+            right: 420px;
+            padding: 10px 14px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            z-index: 100;
+            display: flex;
+            gap: 16px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 10px;
+            color: var(--dim);
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: fixed;
+            padding: 10px 14px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            z-index: 200;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            max-width: 250px;
+        }
+
+        .tooltip.visible { opacity: 1; }
+
+        .tooltip-title {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .tooltip-content {
+            font-size: 10px;
+            color: var(--dim);
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+
+    <!-- Left Panel -->
+    <div class="panel panel-left">
+        <div class="header">
+            <div class="logo-row">
+                <div class="logo-icon">🔬</div>
+                <div class="logo-text">
+                    <div class="title">JANUS LAB</div>
+                    <div class="subtitle">Simulateur de Recherche Cosmologique</div>
+                </div>
+                <div class="version-badge">v2.0</div>
+            </div>
+        </div>
+
+        <!-- Physical Constants -->
+        <div class="section">
+            <div class="section-title">Constantes Physiques (SI normalisé)</div>
+            <div class="constants-grid">
+                <div class="constant-card">
+                    <div class="constant-symbol">G</div>
+                    <div class="constant-name">Gravitation</div>
+                    <div class="constant-value">6.674×10⁻¹¹</div>
+                </div>
+                <div class="constant-card">
+                    <div class="constant-symbol">c</div>
+                    <div class="constant-name">Vitesse lumière</div>
+                    <div class="constant-value">299 792 km/s</div>
+                </div>
+                <div class="constant-card">
+                    <div class="constant-symbol">H₀</div>
+                    <div class="constant-name">Hubble</div>
+                    <div class="constant-value" id="hubble-value">70 km/s/Mpc</div>
+                </div>
+                <div class="constant-card">
+                    <div class="constant-symbol">Ω</div>
+                    <div class="constant-name">Densité critique</div>
+                    <div class="constant-value" id="omega-value">1.00</div>
+                </div>
+                <div class="constant-card">
+                    <div class="constant-symbol">M☉</div>
+                    <div class="constant-name">Masse solaire</div>
+                    <div class="constant-value">1.989×10³⁰ kg</div>
+                </div>
+                <div class="constant-card">
+                    <div class="constant-symbol">ρ±</div>
+                    <div class="constant-name">Ratio Janus</div>
+                    <div class="constant-value" id="janus-ratio">5:95</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Object Types -->
+        <div class="section">
+            <div class="section-title">Types d'Objets Astrophysiques</div>
+            <div class="object-grid">
+                <button class="object-btn active" id="obj-star" onclick="toggleObject('star')">
+                    <span class="icon">⭐</span>
+                    Étoiles
+                </button>
+                <button class="object-btn active" id="obj-galaxy" onclick="toggleObject('galaxy')">
+                    <span class="icon">🌀</span>
+                    Galaxies
+                </button>
+                <button class="object-btn" id="obj-blackhole" onclick="toggleObject('blackhole')">
+                    <span class="icon">🕳️</span>
+                    Trous Noirs
+                </button>
+                <button class="object-btn active" id="obj-darkmatter" onclick="toggleObject('darkmatter')">
+                    <span class="icon">👻</span>
+                    Masse −
+                </button>
+                <button class="object-btn" id="obj-nebula" onclick="toggleObject('nebula')">
+                    <span class="icon">🌫️</span>
+                    Nébuleuses
+                </button>
+                <button class="object-btn" id="obj-quasar" onclick="toggleObject('quasar')">
+                    <span class="icon">💎</span>
+                    Quasars
+                </button>
+            </div>
+        </div>
+
+        <!-- Scenarios -->
+        <div class="section">
+            <div class="section-title">Scénarios de Simulation</div>
+            <div class="scenario-grid">
+                <button class="scenario-btn active full" id="sc-universe" onclick="loadScenario('universe')">
+                    <div class="name">🌌 Univers Janus Complet</div>
+                    <div class="desc">5% matière visible, 95% masse négative, formation des structures</div>
+                </button>
+                <button class="scenario-btn" id="sc-localgroup" onclick="loadScenario('localgroup')">
+                    <div class="name">🏠 Groupe Local</div>
+                    <div class="desc">Voie Lactée + Andromède</div>
+                </button>
+                <button class="scenario-btn" id="sc-cluster" onclick="loadScenario('cluster')">
+                    <div class="name">✨ Amas de Galaxies</div>
+                    <div class="desc">Virgo-like cluster</div>
+                </button>
+                <button class="scenario-btn" id="sc-void" onclick="loadScenario('void')">
+                    <div class="name">🔮 Vide Cosmique</div>
+                    <div class="desc">Dipôle Répulseur</div>
+                </button>
+                <button class="scenario-btn" id="sc-filament" onclick="loadScenario('filament')">
+                    <div class="name">🕸️ Filament Cosmique</div>
+                    <div class="desc">Great Wall structure</div>
+                </button>
+                <button class="scenario-btn" id="sc-collision" onclick="loadScenario('collision')">
+                    <div class="name">💥 Collision Amas</div>
+                    <div class="desc">Bullet Cluster Janus</div>
+                </button>
+                <button class="scenario-btn" id="sc-primordial" onclick="loadScenario('primordial')">
+                    <div class="name">🔥 Univers Primordial</div>
+                    <div class="desc">t = 380 000 ans</div>
+                </button>
+                <button class="scenario-btn" id="sc-solar" onclick="loadScenario('solar')">
+                    <div class="name">☀️ Système Solaire</div>
+                    <div class="desc">Soleil + planètes</div>
+                </button>
+            </div>
+        </div>
+
+        <!-- Parameters -->
+        <div class="section">
+            <div class="section-title">Paramètres de Simulation</div>
+            
+            <div class="control-row">
+                <span class="control-label">Échelle temps</span>
+                <input type="range" id="ctrl-timescale" min="1" max="1000" value="100">
+                <span class="control-value" id="timescale-value">100 Ma/s</span>
+            </div>
+
+            <div class="control-row">
+                <span class="control-label">Zoom spatial</span>
+                <input type="range" id="ctrl-zoom" min="1" max="100" value="50">
+                <span class="control-value" id="zoom-value">50 Mpc</span>
+            </div>
+
+            <div class="control-row">
+                <span class="control-label">Ratio m⁺/m⁻</span>
+                <input type="range" id="ctrl-ratio" min="0.01" max="0.5" step="0.01" value="0.053">
+                <span class="control-value" id="ratio-value">5:95</span>
+            </div>
+
+            <div class="control-row">
+                <span class="control-label">Nb objets</span>
+                <input type="range" id="ctrl-objects" min="100" max="2000" step="50" value="500">
+                <span class="control-value" id="objects-value">500</span>
+            </div>
+
+            <div class="control-row">
+                <span class="control-label">H₀</span>
+                <input type="range" id="ctrl-hubble" min="50" max="100" value="70">
+                <span class="control-value" id="hubble-ctrl">70</span>
+            </div>
+
+            <div class="btn-grid" style="margin-top: 12px;">
+                <button class="btn primary" id="btn-play" onclick="togglePause()">⏸ Pause</button>
+                <button class="btn" onclick="resetSimulation()">↺ Reset</button>
+                <button class="btn" id="btn-trails" onclick="toggleTrails()">◌ Traces</button>
+                <button class="btn active" id="btn-forces" onclick="toggleForces()">→ Forces</button>
+                <button class="btn" id="btn-labels" onclick="toggleLabels()">📝 Labels</button>
+                <button class="btn" id="btn-grid" onclick="toggleGrid()">▦ Grille</button>
+            </div>
+        </div>
+
+        <!-- Export -->
+        <div class="section">
+            <div class="section-title">Export & Données</div>
+            <div class="btn-grid">
+                <button class="btn" onclick="exportData('json')">📄 JSON</button>
+                <button class="btn" onclick="exportData('csv')">📊 CSV</button>
+                <button class="btn full" onclick="takeScreenshot()">📸 Capture d'écran</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Panel -->
+    <div class="panel panel-right">
+        <div class="header">
+            <div class="title" style="font-size: 18px;">🔭 Centre d'Analyse</div>
+            <div class="subtitle" style="font-size: 10px; color: var(--dim);">Détection automatique de phénomènes</div>
+        </div>
+
+        <!-- Discovery Mode -->
+        <div class="section">
+            <div class="section-title">Mode Découverte</div>
+            
+            <div class="discovery-panel">
+                <div class="discovery-header">
+                    <div class="discovery-status" id="discovery-status"></div>
+                    <div class="discovery-title">Analyse en cours</div>
+                    <div class="discovery-time" id="discovery-time">00:00:00</div>
+                </div>
+                
+                <div class="btn-grid">
+                    <button class="btn success full" id="btn-discovery" onclick="toggleDiscovery()">
+                        ▶ Démarrer Recherche
+                    </button>
+                </div>
+
+                <div class="discovery-stats">
+                    <div class="discovery-stat">
+                        <div class="discovery-stat-value" id="phenomena-count">0</div>
+                        <div class="discovery-stat-label">Phénomènes</div>
+                    </div>
+                    <div class="discovery-stat">
+                        <div class="discovery-stat-value" id="iterations-count">0</div>
+                        <div class="discovery-stat-label">Itérations</div>
+                    </div>
+                    <div class="discovery-stat">
+                        <div class="discovery-stat-value" id="rare-count">0</div>
+                        <div class="discovery-stat-label">Rares</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="section">
+            <div class="section-title">Statistiques en Temps Réel</div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Étoiles</div>
+                    <div class="stat-value pos" id="stat-stars">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Galaxies</div>
+                    <div class="stat-value pos" id="stat-galaxies">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Masse −</div>
+                    <div class="stat-value neg" id="stat-darkmatter">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Trous Noirs</div>
+                    <div class="stat-value" id="stat-blackholes">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Énergie Tot.</div>
+                    <div class="stat-value accent" id="stat-energy">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Hubble Obs.</div>
+                    <div class="stat-value" id="stat-hubble">--</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="section">
+            <div class="section-title">Graphiques</div>
+            
+            <div class="chart-container">
+                <div class="chart-title">📈 Énergie (cinétique / potentielle)</div>
+                <canvas class="chart-canvas" id="chart-energy"></canvas>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-title">📊 Distribution radiale</div>
+                <canvas class="chart-canvas" id="chart-distribution"></canvas>
+            </div>
+        </div>
+
+        <!-- Phenomena Log -->
+        <div class="section">
+            <div class="section-title">Journal des Phénomènes</div>
+            <div class="phenomena-log" id="phenomena-log">
+                <div class="phenomenon-item">
+                    <span class="phenomenon-icon">🚀</span>
+                    <div class="phenomenon-info">
+                        <div class="phenomenon-name">Simulation initialisée</div>
+                        <div class="phenomenon-time">t = 0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detected Phenomena Types -->
+        <div class="section">
+            <div class="section-title">Types de Phénomènes Détectables</div>
+            <div style="font-size: 10px; color: var(--dim); line-height: 1.8;">
+                🌀 <strong>Formation galaxie</strong> — Collapse gravitationnel<br>
+                💫 <strong>Fusion galaxies</strong> — Collision majeure<br>
+                🕳️ <strong>Formation trou noir</strong> — Effondrement stellaire<br>
+                🔮 <strong>Vide cosmique</strong> — Répulsion masse négative<br>
+                🌊 <strong>Onde de densité</strong> — Propagation structure<br>
+                ⚡ <strong>Jet relativiste</strong> — Éjection matière<br>
+                🔥 <strong>Sursaut</strong> — Événement énergétique<br>
+                🌈 <strong>Lentille gravitationnelle</strong> — Distorsion espace
+            </div>
+        </div>
+    </div>
+
+    <!-- Info Bar -->
+    <div class="info-bar">
+        <div class="info-item">
+            <div class="info-label">Temps Cosmique</div>
+            <div class="info-value" id="cosmic-time">0 Ma</div>
+        </div>
+        <div class="info-item">
+            <div class="info-label">Redshift z</div>
+            <div class="info-value" id="redshift">0.00</div>
+        </div>
+        <div class="info-item">
+            <div class="info-label">Facteur a(t)</div>
+            <div class="info-value" id="scale-factor">1.000</div>
+        </div>
+        <div class="info-item">
+            <div class="info-label">Objets</div>
+            <div class="info-value" id="object-count">0</div>
+        </div>
+        <div class="info-item">
+            <div class="info-label">FPS</div>
+            <div class="info-value" id="fps">60</div>
+        </div>
+    </div>
+
+    <!-- Scale Bar -->
+    <div class="scale-bar">
+        <div class="scale-line"></div>
+        <div class="scale-value" id="scale-label">10 Mpc</div>
+    </div>
+
+    <!-- Legend -->
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-dot" style="background: #fff8e7; box-shadow: 0 0 8px #fff8e7;"></div>
+            Étoile
+        </div>
+        <div class="legend-item">
+            <div class="legend-dot" style="background: var(--pos); box-shadow: 0 0 8px var(--pos);"></div>
+            Galaxie
+        </div>
+        <div class="legend-item">
+            <div class="legend-dot" style="background: var(--neg); box-shadow: 0 0 8px var(--neg);"></div>
+            Masse −
+        </div>
+        <div class="legend-item">
+            <div class="legend-dot" style="background: #1a0a20; border: 2px solid #6a3a70;"></div>
+            Trou Noir
+        </div>
+    </div>
+
+    <!-- Tooltip -->
+    <div class="tooltip" id="tooltip">
+        <div class="tooltip-title">Objet</div>
+        <div class="tooltip-content">Info</div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // ============================================
+        // JANUS LAB - RESEARCH-GRADE COSMOLOGICAL SIMULATOR
+        // ============================================
+
+        // Physical Constants (normalized units)
+        const PHYSICS = {
+            G: 1.0,                    // Gravitational constant (normalized)
+            c: 100,                    // Speed of light (normalized)
+            H0: 70,                    // Hubble constant (km/s/Mpc)
+            OMEGA_M: 0.05,             // Visible matter density (Janus: 5%)
+            OMEGA_NEG: 0.95,           // Negative mass density (Janus: 95%)
+            SOLAR_MASS: 1.0,           // Solar mass unit
+            MPC: 1.0,                  // Megaparsec unit
+            GYR: 1.0,                  // Gigayear unit
+        };
+
+        // Simulation Configuration
+        const CONFIG = {
+            timeScale: 100,            // Ma per second
+            spatialScale: 50,          // Mpc view
+            massRatio: 0.053,          // 5% visible / 95% invisible
+            nObjects: 500,
+            dt: 0.016,
+            speed: 1.0,
+            damping: 0.999,
+            softening: 3.0,
+            collisionRadius: 2.5,
+            bounds: 200,
+            enableCollisions: true,
+            
+            // Object toggles
+            objects: {
+                star: true,
+                galaxy: true,
+                blackhole: false,
+                darkmatter: true,
+                nebula: false,
+                quasar: false
+            }
+        };
+
+        // Object Types with properties
+        const OBJECT_TYPES = {
+            star: {
+                massRange: [0.1, 50],      // Solar masses
+                sizeRange: [0.5, 2],
+                colors: {
+                    hot: 0xaaccff,          // O/B stars
+                    medium: 0xffffff,       // A/F/G stars
+                    cold: 0xffaa77          // K/M stars
+                },
+                positive: true
+            },
+            galaxy: {
+                massRange: [1e9, 1e12],     // Solar masses
+                sizeRange: [2, 6],
+                colors: {
+                    spiral: 0x00b4d8,
+                    elliptical: 0xffcc66,
+                    irregular: 0x88aaff
+                },
+                positive: true
+            },
+            blackhole: {
+                massRange: [3, 1e10],       // Solar masses
+                sizeRange: [1, 4],
+                color: 0x1a0a20,
+                positive: true              // Positive mass (attracts)
+            },
+            darkmatter: {
+                massRange: [1e10, 1e14],    // Solar masses (clumps)
+                sizeRange: [1.5, 4],
+                color: 0xff6b35,
+                positive: false             // Negative mass!
+            },
+            nebula: {
+                massRange: [100, 10000],
+                sizeRange: [3, 8],
+                colors: [0xff6688, 0x88ff66, 0x6688ff],
+                positive: true
+            },
+            quasar: {
+                massRange: [1e8, 1e11],
+                sizeRange: [1.5, 3],
+                color: 0xffffff,
+                positive: true
+            }
+        };
+
+        // Three.js Setup
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x000008);
+        scene.fog = new THREE.FogExp2(0x000008, 0.002);
+
+        // Stars background
+        const starsGeometry = new THREE.BufferGeometry();
+        const starPositions = [];
+        const starColors = [];
+        for (let i = 0; i < 5000; i++) {
+            starPositions.push(
+                (Math.random() - 0.5) * 2000,
+                (Math.random() - 0.5) * 2000,
+                (Math.random() - 0.5) * 2000
+            );
+            const brightness = 0.3 + Math.random() * 0.7;
+            starColors.push(brightness, brightness, brightness * 0.9);
+        }
+        starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starPositions, 3));
+        starsGeometry.setAttribute('color', new THREE.Float32BufferAttribute(starColors, 3));
+        const starsMaterial = new THREE.PointsMaterial({ size: 0.8, vertexColors: true, transparent: true, opacity: 0.8 });
+        scene.add(new THREE.Points(starsGeometry, starsMaterial));
+
+        // Camera
+        const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 3000);
+        camera.position.set(0, 150, 350);
+        camera.lookAt(0, 0, 0);
+
+        // Renderer
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        container.appendChild(renderer.domElement);
+
+        // Lighting
+        scene.add(new THREE.AmbientLight(0x202030, 0.5));
+        const sunLight = new THREE.PointLight(0xffffee, 1.0, 500);
+        sunLight.position.set(0, 50, 0);
+        scene.add(sunLight);
+
+        // Cosmic Object Class
+        class CosmicObject {
+            constructor(type, mass, position, velocity) {
+                this.type = type;
+                this.mass = mass;
+                this.position = position.clone();
+                this.velocity = velocity.clone();
+                this.force = new THREE.Vector3();
+                this.trail = [];
+                this.age = 0;
+                this.id = Math.random().toString(36).substr(2, 9);
+                
+                // Type-specific properties
+                const typeInfo = OBJECT_TYPES[type];
+                this.isPositive = typeInfo.positive;
+                if (!this.isPositive) {
+                    this.mass = -Math.abs(mass);
+                }
+            }
+        }
+
+        // State
+        let objects = [];
+        let meshes = [];
+        let trails = [];
+        let forceLines = new THREE.Group();
+        let labels = new THREE.Group();
+        let gridHelper = null;
+        scene.add(forceLines);
+        scene.add(labels);
+
+        let isPaused = false;
+        let showTrails = false;
+        let showForces = true;
+        let showLabels = false;
+        let showGrid = false;
+        
+        // Discovery mode
+        let discoveryMode = false;
+        let discoveryStartTime = 0;
+        let phenomenaCount = 0;
+        let rareCount = 0;
+        let iterations = 0;
+        let phenomena = [];
+
+        // Time tracking
+        let simTime = 0;  // in Ma (Million years)
+        let frameCount = 0;
+        let lastFpsTime = performance.now();
+
+        // Energy history for charts
+        let energyHistory = { kinetic: [], potential: [], total: [] };
+        let distributionHistory = [];
+
+        // Charts
+        const chartEnergy = document.getElementById('chart-energy').getContext('2d');
+        const chartDistribution = document.getElementById('chart-distribution').getContext('2d');
+
+        // ============================================
+        // JANUS PHYSICS ENGINE
+        // ============================================
+
+        function computeForces() {
+            objects.forEach(obj => obj.force.set(0, 0, 0));
+            
+            let kineticEnergy = 0;
+            let potentialEnergy = 0;
+
+            for (let i = 0; i < objects.length; i++) {
+                for (let j = i + 1; j < objects.length; j++) {
+                    const o1 = objects[i];
+                    const o2 = objects[j];
+                    
+                    const r = new THREE.Vector3().subVectors(o2.position, o1.position);
+                    const dist = Math.max(r.length(), CONFIG.softening);
+                    
+                    // JANUS LAWS
+                    const m1 = o1.mass;
+                    const m2 = o2.mass;
+                    const sameSign = (m1 > 0 && m2 > 0) || (m1 < 0 && m2 < 0);
+                    const absM1 = Math.abs(m1);
+                    const absM2 = Math.abs(m2);
+                    
+                    // Gravitational force with Hubble expansion
+                    let forceMag = PHYSICS.G * absM1 * absM2 / (dist * dist);
+                    
+                    // Apply Janus law
+                    if (!sameSign) {
+                        forceMag = -forceMag; // Repulsion between opposite signs
+                    }
+                    
+                    // Add Hubble flow (expansion effect)
+                    const hubbleForce = PHYSICS.H0 * 0.0001 * dist;
+                    
+                    // Clamp
+                    const maxForce = 15.0;
+                    forceMag = Math.sign(forceMag) * Math.min(Math.abs(forceMag), maxForce);
+                    
+                    // Apply
+                    const forceVec = r.clone().normalize().multiplyScalar(forceMag);
+                    o1.force.add(forceVec);
+                    o2.force.sub(forceVec);
+                    
+                    // Energy
+                    if (sameSign) {
+                        potentialEnergy -= PHYSICS.G * absM1 * absM2 / dist;
+                    } else {
+                        potentialEnergy += PHYSICS.G * absM1 * absM2 / dist;
+                    }
+                }
+                
+                kineticEnergy += 0.5 * Math.abs(objects[i].mass) * objects[i].velocity.lengthSq();
+            }
+            
+            // Update energy display
+            const totalEnergy = kineticEnergy + potentialEnergy;
+            document.getElementById('stat-energy').textContent = totalEnergy.toFixed(0);
+            
+            // Store history
+            energyHistory.kinetic.push(kineticEnergy);
+            energyHistory.potential.push(potentialEnergy);
+            energyHistory.total.push(totalEnergy);
+            if (energyHistory.kinetic.length > 100) {
+                energyHistory.kinetic.shift();
+                energyHistory.potential.shift();
+                energyHistory.total.shift();
+            }
+            
+            return { kinetic: kineticEnergy, potential: potentialEnergy };
+        }
+
+        function integrateMotion() {
+            const dt = CONFIG.dt * CONFIG.speed;
+            
+            objects.forEach(obj => {
+                const accel = obj.force.clone().divideScalar(Math.abs(obj.mass));
+                
+                obj.velocity.add(accel.multiplyScalar(dt));
+                obj.velocity.multiplyScalar(CONFIG.damping);
+                obj.position.add(obj.velocity.clone().multiplyScalar(dt));
+                obj.age += dt;
+                
+                // Boundary
+                const dist = obj.position.length();
+                if (dist > CONFIG.bounds) {
+                    obj.position.multiplyScalar(CONFIG.bounds / dist);
+                    obj.velocity.multiplyScalar(0.8);
+                }
+            });
+            
+            if (CONFIG.enableCollisions) {
+                handleCollisions();
+            }
+            
+            // Trails
+            if (showTrails) {
+                objects.forEach(obj => {
+                    obj.trail.push(obj.position.clone());
+                    if (obj.trail.length > 60) obj.trail.shift();
+                });
+            }
+        }
+
+        function handleCollisions() {
+            for (let i = 0; i < objects.length; i++) {
+                for (let j = i + 1; j < objects.length; j++) {
+                    const o1 = objects[i];
+                    const o2 = objects[j];
+                    
+                    const delta = new THREE.Vector3().subVectors(o2.position, o1.position);
+                    const dist = delta.length();
+                    const minDist = CONFIG.collisionRadius * 2;
+                    
+                    if (dist < minDist && dist > 0.01) {
+                        const normal = delta.clone().normalize();
+                        
+                        // Separate
+                        const overlap = minDist - dist;
+                        o1.position.sub(normal.clone().multiplyScalar(overlap * 0.5));
+                        o2.position.add(normal.clone().multiplyScalar(overlap * 0.5));
+                        
+                        // Elastic collision
+                        const relVel = new THREE.Vector3().subVectors(o1.velocity, o2.velocity);
+                        const relVelNormal = relVel.dot(normal);
+                        
+                        if (relVelNormal > 0) {
+                            const m1 = Math.abs(o1.mass);
+                            const m2 = Math.abs(o2.mass);
+                            const impulse = (1.8 * relVelNormal) / (m1 + m2);
+                            
+                            o1.velocity.sub(normal.clone().multiplyScalar(impulse * m2));
+                            o2.velocity.add(normal.clone().multiplyScalar(impulse * m1));
+                            
+                            // Detect merger event
+                            if (o1.type === 'galaxy' && o2.type === 'galaxy') {
+                                detectPhenomenon('merger', o1.position, 'Fusion de galaxies détectée!');
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // ============================================
+        // PHENOMENON DETECTION
+        // ============================================
+
+        function detectPhenomenon(type, position, description) {
+            if (!discoveryMode) return;
+            
+            const phenomenon = {
+                type,
+                position: position.clone(),
+                time: simTime,
+                description
+            };
+            
+            phenomena.push(phenomenon);
+            phenomenaCount++;
+            
+            const isRare = ['merger', 'blackhole_form', 'void_creation', 'jet'].includes(type);
+            if (isRare) rareCount++;
+            
+            // Add to log
+            addPhenomenonToLog(phenomenon, isRare);
+            
+            // Update counters
+            document.getElementById('phenomena-count').textContent = phenomenaCount;
+            document.getElementById('rare-count').textContent = rareCount;
+        }
+
+        function addPhenomenonToLog(phenomenon, isRare) {
+            const log = document.getElementById('phenomena-log');
+            const icons = {
+                merger: '💫',
+                cluster_form: '✨',
+                void_creation: '🔮',
+                density_wave: '🌊',
+                blackhole_form: '🕳️',
+                jet: '⚡',
+                lens: '🌈',
+                structure: '🌀'
+            };
+            
+            const item = document.createElement('div');
+            item.className = `phenomenon-item ${isRare ? 'rare' : ''}`;
+            item.innerHTML = `
+                <span class="phenomenon-icon">${icons[phenomenon.type] || '📍'}</span>
+                <div class="phenomenon-info">
+                    <div class="phenomenon-name">${phenomenon.description}</div>
+                    <div class="phenomenon-time">t = ${phenomenon.time.toFixed(1)} Ma</div>
+                </div>
+            `;
+            
+            log.insertBefore(item, log.firstChild);
+            
+            // Keep only last 20
+            while (log.children.length > 20) {
+                log.removeChild(log.lastChild);
+            }
+        }
+
+        function analyzeSimulation() {
+            if (!discoveryMode) return;
+            
+            iterations++;
+            document.getElementById('iterations-count').textContent = iterations;
+            
+            // Analyze clustering
+            const positiveObjects = objects.filter(o => o.mass > 0);
+            const negativeObjects = objects.filter(o => o.mass < 0);
+            
+            // Detect cluster formation
+            const clusters = findClusters(positiveObjects, 30);
+            if (clusters.length > 0 && Math.random() < 0.01) {
+                const largestCluster = clusters.reduce((a, b) => a.length > b.length ? a : b);
+                if (largestCluster.length > 5) {
+                    const center = new THREE.Vector3();
+                    largestCluster.forEach(o => center.add(o.position));
+                    center.divideScalar(largestCluster.length);
+                    detectPhenomenon('cluster_form', center, `Amas de ${largestCluster.length} objets formé`);
+                }
+            }
+            
+            // Detect voids (large empty regions with negative mass)
+            const negativeClusters = findClusters(negativeObjects, 40);
+            if (negativeClusters.length > 0 && Math.random() < 0.005) {
+                const largestVoid = negativeClusters.reduce((a, b) => a.length > b.length ? a : b);
+                if (largestVoid.length > 8) {
+                    const center = new THREE.Vector3();
+                    largestVoid.forEach(o => center.add(o.position));
+                    center.divideScalar(largestVoid.length);
+                    detectPhenomenon('void_creation', center, `Vide cosmique détecté (${largestVoid.length} masses −)`);
+                }
+            }
+            
+            // Detect density waves
+            if (Math.random() < 0.002) {
+                const avgVel = objects.reduce((sum, o) => sum + o.velocity.length(), 0) / objects.length;
+                if (avgVel > 1.5) {
+                    detectPhenomenon('density_wave', new THREE.Vector3(), 'Onde de densité en propagation');
+                }
+            }
+        }
+
+        function findClusters(objectList, threshold) {
+            const clusters = [];
+            const visited = new Set();
+            
+            objectList.forEach((obj, i) => {
+                if (visited.has(i)) return;
+                
+                const cluster = [obj];
+                visited.add(i);
+                const queue = [i];
+                
+                while (queue.length > 0) {
+                    const current = queue.shift();
+                    objectList.forEach((other, j) => {
+                        if (visited.has(j)) return;
+                        if (objectList[current].position.distanceTo(other.position) < threshold) {
+                            visited.add(j);
+                            cluster.push(other);
+                            queue.push(j);
+                        }
+                    });
+                }
+                
+                if (cluster.length > 2) {
+                    clusters.push(cluster);
+                }
+            });
+            
+            return clusters;
+        }
+
+        // ============================================
+        // VISUALIZATION
+        // ============================================
+
+        function createMesh(obj) {
+            const typeInfo = OBJECT_TYPES[obj.type];
+            let geometry, material, mesh;
+            
+            const size = typeInfo.sizeRange[0] + Math.random() * (typeInfo.sizeRange[1] - typeInfo.sizeRange[0]);
+            
+            switch(obj.type) {
+                case 'star':
+                    geometry = new THREE.SphereGeometry(size, 12, 12);
+                    const temp = Math.random();
+                    const starColor = temp > 0.7 ? typeInfo.colors.hot : (temp > 0.3 ? typeInfo.colors.medium : typeInfo.colors.cold);
+                    material = new THREE.MeshStandardMaterial({
+                        color: starColor,
+                        emissive: starColor,
+                        emissiveIntensity: 0.8,
+                        metalness: 0,
+                        roughness: 0.3
+                    });
+                    break;
+                    
+                case 'galaxy':
+                    geometry = new THREE.SphereGeometry(size, 16, 16);
+                    const galaxyType = Math.random();
+                    const galaxyColor = galaxyType > 0.6 ? typeInfo.colors.spiral : (galaxyType > 0.3 ? typeInfo.colors.elliptical : typeInfo.colors.irregular);
+                    material = new THREE.MeshStandardMaterial({
+                        color: galaxyColor,
+                        emissive: galaxyColor,
+                        emissiveIntensity: 0.5,
+                        metalness: 0.2,
+                        roughness: 0.5,
+                        transparent: true,
+                        opacity: 0.9
+                    });
+                    break;
+                    
+                case 'blackhole':
+                    geometry = new THREE.SphereGeometry(size, 20, 20);
+                    material = new THREE.MeshBasicMaterial({
+                        color: typeInfo.color,
+                        transparent: true,
+                        opacity: 0.9
+                    });
+                    // Add accretion disk
+                    const diskGeom = new THREE.RingGeometry(size * 1.2, size * 2.5, 32);
+                    const diskMat = new THREE.MeshBasicMaterial({
+                        color: 0xff6600,
+                        transparent: true,
+                        opacity: 0.6,
+                        side: THREE.DoubleSide
+                    });
+                    const disk = new THREE.Mesh(diskGeom, diskMat);
+                    disk.rotation.x = Math.PI / 2;
+                    mesh = new THREE.Mesh(geometry, material);
+                    mesh.add(disk);
+                    break;
+                    
+                case 'darkmatter':
+                    geometry = new THREE.SphereGeometry(size, 12, 12);
+                    material = new THREE.MeshStandardMaterial({
+                        color: typeInfo.color,
+                        emissive: typeInfo.color,
+                        emissiveIntensity: 0.4,
+                        metalness: 0,
+                        roughness: 0.8,
+                        transparent: true,
+                        opacity: 0.7
+                    });
+                    break;
+                    
+                case 'nebula':
+                    geometry = new THREE.SphereGeometry(size, 8, 8);
+                    const nebColor = typeInfo.colors[Math.floor(Math.random() * typeInfo.colors.length)];
+                    material = new THREE.MeshBasicMaterial({
+                        color: nebColor,
+                        transparent: true,
+                        opacity: 0.4
+                    });
+                    break;
+                    
+                case 'quasar':
+                    geometry = new THREE.SphereGeometry(size, 16, 16);
+                    material = new THREE.MeshStandardMaterial({
+                        color: typeInfo.color,
+                        emissive: typeInfo.color,
+                        emissiveIntensity: 1.5,
+                        metalness: 0,
+                        roughness: 0
+                    });
+                    break;
+                    
+                default:
+                    geometry = new THREE.SphereGeometry(size, 12, 12);
+                    material = new THREE.MeshStandardMaterial({ color: 0xffffff });
+            }
+            
+            if (!mesh) {
+                mesh = new THREE.Mesh(geometry, material);
+            }
+            
+            mesh.position.copy(obj.position);
+            return mesh;
+        }
+
+        function updateVisuals() {
+            objects.forEach((obj, i) => {
+                meshes[i].position.copy(obj.position);
+                
+                // Pulse effect for active objects
+                const speed = obj.velocity.length();
+                const pulse = 1 + Math.sin(Date.now() * 0.003 + i) * 0.1 * Math.min(speed, 1);
+                meshes[i].scale.setScalar(pulse);
+                
+                // Trail
+                if (showTrails && obj.trail.length > 1) {
+                    const positions = new Float32Array(obj.trail.length * 3);
+                    obj.trail.forEach((pos, j) => {
+                        positions[j * 3] = pos.x;
+                        positions[j * 3 + 1] = pos.y;
+                        positions[j * 3 + 2] = pos.z;
+                    });
+                    trails[i].geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                    trails[i].geometry.computeBoundingSphere();
+                }
+                trails[i].visible = showTrails;
+            });
+            
+            if (showForces) updateForceVectors();
+        }
+
+        function updateForceVectors() {
+            forceLines.clear();
+            
+            objects.forEach(obj => {
+                if (obj.force.length() < 0.05) return;
+                
+                const dir = obj.force.clone().normalize();
+                const len = Math.min(obj.force.length() * 3, 20);
+                
+                const isRepulsion = obj.mass < 0;
+                const color = isRepulsion ? 0xff2266 : 0x00ff88;
+                
+                const points = [
+                    obj.position.clone(),
+                    obj.position.clone().add(dir.multiplyScalar(len))
+                ];
+                
+                const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                const material = new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.6 });
+                forceLines.add(new THREE.Line(geometry, material));
+            });
+        }
+
+        function updateCharts() {
+            // Energy chart
+            chartEnergy.fillStyle = 'rgba(0,0,0,0.3)';
+            chartEnergy.fillRect(0, 0, 360, 80);
+            
+            if (energyHistory.kinetic.length > 1) {
+                const maxE = Math.max(...energyHistory.kinetic, ...energyHistory.potential.map(Math.abs)) || 1;
+                
+                // Kinetic (green)
+                chartEnergy.strokeStyle = '#00ff88';
+                chartEnergy.lineWidth = 1.5;
+                chartEnergy.beginPath();
+                energyHistory.kinetic.forEach((e, i) => {
+                    const x = (i / energyHistory.kinetic.length) * 360;
+                    const y = 40 - (e / maxE) * 35;
+                    i === 0 ? chartEnergy.moveTo(x, y) : chartEnergy.lineTo(x, y);
+                });
+                chartEnergy.stroke();
+                
+                // Potential (red)
+                chartEnergy.strokeStyle = '#ff4466';
+                chartEnergy.beginPath();
+                energyHistory.potential.forEach((e, i) => {
+                    const x = (i / energyHistory.potential.length) * 360;
+                    const y = 40 - (e / maxE) * 35;
+                    i === 0 ? chartEnergy.moveTo(x, y) : chartEnergy.lineTo(x, y);
+                });
+                chartEnergy.stroke();
+            }
+            
+            // Distribution chart (radial)
+            chartDistribution.fillStyle = 'rgba(0,0,0,0.3)';
+            chartDistribution.fillRect(0, 0, 360, 80);
+            
+            const bins = new Array(20).fill(0);
+            const binsPosNeg = { pos: new Array(20).fill(0), neg: new Array(20).fill(0) };
+            
+            objects.forEach(obj => {
+                const r = obj.position.length();
+                const bin = Math.min(Math.floor(r / (CONFIG.bounds / 20)), 19);
+                bins[bin]++;
+                if (obj.mass > 0) binsPosNeg.pos[bin]++;
+                else binsPosNeg.neg[bin]++;
+            });
+            
+            const maxBin = Math.max(...bins) || 1;
+            
+            // Positive (blue)
+            chartDistribution.fillStyle = 'rgba(0, 180, 216, 0.6)';
+            binsPosNeg.pos.forEach((count, i) => {
+                const x = (i / 20) * 360;
+                const h = (count / maxBin) * 70;
+                chartDistribution.fillRect(x, 80 - h, 16, h);
+            });
+            
+            // Negative (orange)
+            chartDistribution.fillStyle = 'rgba(255, 107, 53, 0.6)';
+            binsPosNeg.neg.forEach((count, i) => {
+                const x = (i / 20) * 360 + 2;
+                const h = (count / maxBin) * 70;
+                chartDistribution.fillRect(x, 80 - h, 14, h);
+            });
+        }
+
+        function updateStatistics() {
+            const stats = {
+                stars: objects.filter(o => o.type === 'star').length,
+                galaxies: objects.filter(o => o.type === 'galaxy').length,
+                darkmatter: objects.filter(o => o.type === 'darkmatter').length,
+                blackholes: objects.filter(o => o.type === 'blackhole').length
+            };
+            
+            document.getElementById('stat-stars').textContent = stats.stars;
+            document.getElementById('stat-galaxies').textContent = stats.galaxies;
+            document.getElementById('stat-darkmatter').textContent = stats.darkmatter;
+            document.getElementById('stat-blackholes').textContent = stats.blackholes;
+            
+            // Cosmological parameters
+            document.getElementById('cosmic-time').textContent = `${simTime.toFixed(0)} Ma`;
+            document.getElementById('object-count').textContent = objects.length;
+            
+            // Calculate observed Hubble from velocities
+            let hubbleSum = 0;
+            let hubbleCount = 0;
+            objects.forEach(obj => {
+                const r = obj.position.length();
+                if (r > 10) {
+                    const radialVel = obj.velocity.dot(obj.position.clone().normalize());
+                    hubbleSum += radialVel / r;
+                    hubbleCount++;
+                }
+            });
+            const observedHubble = hubbleCount > 0 ? (hubbleSum / hubbleCount * 1000).toFixed(1) : '--';
+            document.getElementById('stat-hubble').textContent = observedHubble;
+            
+            // Scale factor (cosmological)
+            const scaleFactor = 1 + simTime * PHYSICS.H0 * 1e-6;
+            document.getElementById('scale-factor').textContent = scaleFactor.toFixed(3);
+            
+            // Redshift
+            const redshift = scaleFactor - 1;
+            document.getElementById('redshift').textContent = redshift.toFixed(3);
+            
+            // FPS
+            frameCount++;
+            const now = performance.now();
+            if (now - lastFpsTime > 1000) {
+                document.getElementById('fps').textContent = Math.round(frameCount * 1000 / (now - lastFpsTime));
+                frameCount = 0;
+                lastFpsTime = now;
+            }
+            
+            // Update Janus ratio display
+            const posCount = objects.filter(o => o.mass > 0).length;
+            const negCount = objects.filter(o => o.mass < 0).length;
+            const total = posCount + negCount;
+            if (total > 0) {
+                document.getElementById('janus-ratio').textContent = `${Math.round(posCount/total*100)}:${Math.round(negCount/total*100)}`;
+            }
+        }
+
+        // ============================================
+        // SCENARIOS
+        // ============================================
+
+        function clearScene() {
+            objects = [];
+            meshes.forEach(m => scene.remove(m));
+            meshes = [];
+            trails.forEach(t => scene.remove(t));
+            trails = [];
+            forceLines.clear();
+            simTime = 0;
+            phenomena = [];
+            phenomenaCount = 0;
+            rareCount = 0;
+            iterations = 0;
+            energyHistory = { kinetic: [], potential: [], total: [] };
+        }
+
+        function addObject(type, mass, position, velocity) {
+            if (!CONFIG.objects[type]) return; // Skip if type is disabled
+            
+            const obj = new CosmicObject(type, mass, position, velocity);
+            objects.push(obj);
+            
+            const mesh = createMesh(obj);
+            scene.add(mesh);
+            meshes.push(mesh);
+            
+            // Trail
+            const trailGeom = new THREE.BufferGeometry();
+            const trailColor = obj.mass > 0 ? 0x00b4d8 : 0xff6b35;
+            const trailMat = new THREE.LineBasicMaterial({ color: trailColor, transparent: true, opacity: 0.3 });
+            const trail = new THREE.Line(trailGeom, trailMat);
+            trail.visible = false;
+            scene.add(trail);
+            trails.push(trail);
+        }
+
+        function loadScenario(name) {
+            clearScene();
+            
+            // Update UI
+            document.querySelectorAll('.scenario-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`sc-${name}`)?.classList.add('active');
+            
+            switch(name) {
+                case 'universe': createUniverse(); break;
+                case 'localgroup': createLocalGroup(); break;
+                case 'cluster': createCluster(); break;
+                case 'void': createVoid(); break;
+                case 'filament': createFilament(); break;
+                case 'collision': createCollision(); break;
+                case 'primordial': createPrimordial(); break;
+                case 'solar': createSolarSystem(); break;
+            }
+        }
+
+        function createUniverse() {
+            const n = CONFIG.nObjects;
+            const nPos = Math.floor(n * CONFIG.massRatio / (CONFIG.massRatio + 1));
+            const nNeg = n - nPos;
+            
+            // Create galaxies (5%)
+            for (let i = 0; i < nPos; i++) {
+                const mass = 1e10 + Math.random() * 1e12;
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(2 * Math.random() - 1);
+                const r = Math.random() * CONFIG.bounds * 0.8;
+                
+                const pos = new THREE.Vector3(
+                    r * Math.sin(phi) * Math.cos(theta),
+                    r * Math.sin(phi) * Math.sin(theta),
+                    r * Math.cos(phi)
+                );
+                
+                // Hubble flow + random
+                const vel = pos.clone().normalize().multiplyScalar(PHYSICS.H0 * r * 0.001);
+                vel.add(new THREE.Vector3().random().subScalar(0.5).multiplyScalar(0.5));
+                
+                addObject('galaxy', mass, pos, vel);
+            }
+            
+            // Create dark matter (95%)
+            for (let i = 0; i < nNeg; i++) {
+                const mass = 1e11 + Math.random() * 1e13;
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(2 * Math.random() - 1);
+                const r = Math.random() * CONFIG.bounds;
+                
+                const pos = new THREE.Vector3(
+                    r * Math.sin(phi) * Math.cos(theta),
+                    r * Math.sin(phi) * Math.sin(theta),
+                    r * Math.cos(phi)
+                );
+                
+                const vel = new THREE.Vector3().random().subScalar(0.5).multiplyScalar(0.3);
+                
+                addObject('darkmatter', mass, pos, vel);
+            }
+        }
+
+        function createLocalGroup() {
+            // Milky Way
+            for (let i = 0; i < 30; i++) {
+                const arm = i % 2;
+                const t = (i / 30) * 3 * Math.PI;
+                const r = 10 + t * 5;
+                const theta = t + arm * Math.PI;
+                
+                const pos = new THREE.Vector3(r * Math.cos(theta), (Math.random() - 0.5) * 5, r * Math.sin(theta));
+                const speed = Math.sqrt(PHYSICS.G * 50 / r) * 0.5;
+                const vel = new THREE.Vector3(-speed * Math.sin(theta), 0, speed * Math.cos(theta));
+                
+                addObject('star', 1 + Math.random() * 10, pos, vel);
+            }
+            
+            // Andromeda
+            for (let i = 0; i < 25; i++) {
+                const arm = i % 2;
+                const t = (i / 25) * 3 * Math.PI;
+                const r = 8 + t * 4;
+                const theta = t + arm * Math.PI;
+                
+                const pos = new THREE.Vector3(
+                    100 + r * Math.cos(theta),
+                    20 + (Math.random() - 0.5) * 5,
+                    50 + r * Math.sin(theta)
+                );
+                const speed = Math.sqrt(PHYSICS.G * 40 / r) * 0.5;
+                const vel = new THREE.Vector3(-speed * Math.sin(theta) - 0.5, 0, speed * Math.cos(theta));
+                
+                addObject('star', 1 + Math.random() * 10, pos, vel);
+            }
+            
+            // Dark matter halos
+            for (let i = 0; i < 100; i++) {
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(2 * Math.random() - 1);
+                const r = 60 + Math.random() * 80;
+                
+                const pos = new THREE.Vector3(
+                    50 + r * Math.sin(phi) * Math.cos(theta),
+                    r * Math.sin(phi) * Math.sin(theta) * 0.3,
+                    25 + r * Math.cos(phi)
+                );
+                
+                addObject('darkmatter', 1e11, pos, new THREE.Vector3().random().subScalar(0.5).multiplyScalar(0.2));
+            }
+        }
+
+        function createCluster() {
+            // Central cluster galaxies
+            for (let i = 0; i < 50; i++) {
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(2 * Math.random() - 1);
+                const r = Math.random() * 50;
+                
+                const pos = new THREE.Vector3(
+                    r * Math.sin(phi) * Math.cos(theta),
+                    r * Math.sin(phi) * Math.sin(theta),
+                    r * Math.cos(phi)
+                );
+                
+                const vel = new THREE.Vector3().random().subScalar(0.5).multiplyScalar(0.8);
+                addObject('galaxy', 1e11 + Math.random() * 1e12, pos, vel);
+            }
+            
+            // Dark matter envelope
+            for (let i = 0; i < 200; i++) {
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(2 * Math.random() - 1);
+                const r = 40 + Math.random() * 100;
+                
+                const pos = new THREE.Vector3(
+                    r * Math.sin(phi) * Math.cos(theta),
+                    r * Math.sin(phi) * Math.sin(theta),
+                    r * Math.cos(phi)
+                );
+                
+                addObject('darkmatter', 1e12, pos, new THREE.Vector3().random().subScalar(0.5).multiplyScalar(0.2));
+            }
+        }
+
+        function createVoid() {
+            // Central negative mass concentration (Dipole Repeller)
+            for (let i = 0; i < 150; i++) {
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(2 * Math.random() - 1);
+                const r = Math.random() * 40;
+                
+                const pos = new THREE.Vector3(
+                    r * Math.sin(phi) * Math.cos(theta),
+                    r * Math.sin(phi) * Math.sin(theta),
+                    r * Math.cos(phi)
+                );
+                
+                addObject('darkmatter', 1e12, pos, new THREE.Vector3().random().subScalar(0.5).multiplyScalar(0.1));
+            }
+            
+            // Surrounding galaxies being repelled
+            for (let i = 0; i < 30; i++) {
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(2 * Math.random() - 1);
+                const r = 70 + Math.random() * 60;
+                
+                const pos = new THREE.Vector3(
+                    r * Math.sin(phi) * Math.cos(theta),
+                    r * Math.sin(phi) * Math.sin(theta),
+                    r * Math.cos(phi)
+                );
+                
+                // Inward velocity (will be repelled)
+                const vel = pos.clone().normalize().multiplyScalar(-0.5);
+                addObject('galaxy', 1e11, pos, vel);
+            }
+        }
+
+        function createFilament() {
+            // Main filament
+            for (let i = 0; i < 60; i++) {
+                const t = (i / 60 - 0.5) * CONFIG.bounds * 1.5;
+                const pos = new THREE.Vector3(
+                    t,
+                    (Math.random() - 0.5) * 20,
+                    (Math.random() - 0.5) * 20
+                );
+                
+                addObject('galaxy', 1e11, pos, new THREE.Vector3().random().subScalar(0.5).multiplyScalar(0.3));
+            }
+            
+            // Confining dark matter walls
+            for (let i = 0; i < 200; i++) {
+                const t = (Math.random() - 0.5) * CONFIG.bounds * 1.5;
+                const side = i % 2 === 0 ? 1 : -1;
+                const pos = new THREE.Vector3(
+                    t,
+                    side * (40 + Math.random() * 30),
+                    (Math.random() - 0.5) * 80 + side * 30
+                );
+                
+                addObject('darkmatter', 1e12, pos, new THREE.Vector3().random().subScalar(0.5).multiplyScalar(0.15));
+            }
+        }
+
+        function createCollision() {
+            // Left cluster
+            for (let i = 0; i < 30; i++) {
+                const pos = new THREE.Vector3(
+                    -70 + (Math.random() - 0.5) * 30,
+                    (Math.random() - 0.5) * 30,
+                    (Math.random() - 0.5) * 30
+                );
+                addObject('galaxy', 1e11, pos, new THREE.Vector3(2, 0, 0));
+            }
+            
+            // Left dark matter halo
+            for (let i = 0; i < 80; i++) {
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(2 * Math.random() - 1);
+                const r = 30 + Math.random() * 20;
+                const pos = new THREE.Vector3(
+                    -70 + r * Math.sin(phi) * Math.cos(theta),
+                    r * Math.sin(phi) * Math.sin(theta),
+                    r * Math.cos(phi)
+                );
+                addObject('darkmatter', 1e12, pos, new THREE.Vector3(2, 0, 0));
+            }
+            
+            // Right cluster
+            for (let i = 0; i < 30; i++) {
+                const pos = new THREE.Vector3(
+                    70 + (Math.random() - 0.5) * 30,
+                    (Math.random() - 0.5) * 30,
+                    (Math.random() - 0.5) * 30
+                );
+                addObject('galaxy', 1e11, pos, new THREE.Vector3(-2, 0, 0));
+            }
+            
+            // Right dark matter halo
+            for (let i = 0; i < 80; i++) {
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(2 * Math.random() - 1);
+                const r = 30 + Math.random() * 20;
+                const pos = new THREE.Vector3(
+                    70 + r * Math.sin(phi) * Math.cos(theta),
+                    r * Math.sin(phi) * Math.sin(theta),
+                    r * Math.cos(phi)
+                );
+                addObject('darkmatter', 1e12, pos, new THREE.Vector3(-2, 0, 0));
+            }
+        }
+
+        function createPrimordial() {
+            // Equal creation of positive and negative at Big Bang
+            const n = CONFIG.nObjects / 2;
+            
+            for (let i = 0; i < n; i++) {
+                // Positive mass (will become galaxies)
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(2 * Math.random() - 1);
+                const r = 5 + Math.random() * 30;
+                
+                const posP = new THREE.Vector3(
+                    r * Math.sin(phi) * Math.cos(theta),
+                    r * Math.sin(phi) * Math.sin(theta),
+                    r * Math.cos(phi)
+                );
+                
+                const velP = posP.clone().normalize().multiplyScalar(1.5 + Math.random());
+                addObject('galaxy', 1e10, posP, velP);
+                
+                // Negative mass (CPT symmetric)
+                const posN = posP.clone().multiplyScalar(-1).add(new THREE.Vector3().random().subScalar(0.5).multiplyScalar(10));
+                const velN = posN.clone().normalize().multiplyScalar(1.5 + Math.random());
+                addObject('darkmatter', 1e11, posN, velN);
+            }
+        }
+
+        function createSolarSystem() {
+            // Sun
+            addObject('star', 1, new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 0));
+            
+            // Planets (simplified)
+            const planets = [
+                { r: 15, speed: 2.5, mass: 0.01 },   // Mercury-like
+                { r: 25, speed: 2.0, mass: 0.02 },   // Venus-like
+                { r: 35, speed: 1.7, mass: 0.02 },   // Earth-like
+                { r: 50, speed: 1.4, mass: 0.01 },   // Mars-like
+                { r: 80, speed: 1.0, mass: 0.5 },    // Jupiter-like
+                { r: 110, speed: 0.8, mass: 0.3 },   // Saturn-like
+                { r: 140, speed: 0.6, mass: 0.1 },   // Uranus-like
+                { r: 170, speed: 0.5, mass: 0.1 }    // Neptune-like
+            ];
+            
+            planets.forEach(p => {
+                const theta = Math.random() * Math.PI * 2;
+                const pos = new THREE.Vector3(p.r * Math.cos(theta), 0, p.r * Math.sin(theta));
+                const vel = new THREE.Vector3(-p.speed * Math.sin(theta), 0, p.speed * Math.cos(theta));
+                addObject('star', p.mass, pos, vel);
+            });
+            
+            // Outer dark matter shell (hypothetical Janus extension)
+            for (let i = 0; i < 50; i++) {
+                const theta = Math.random() * Math.PI * 2;
+                const r = 180 + Math.random() * 20;
+                const pos = new THREE.Vector3(r * Math.cos(theta), (Math.random() - 0.5) * 10, r * Math.sin(theta));
+                addObject('darkmatter', 0.1, pos, new THREE.Vector3().random().subScalar(0.5).multiplyScalar(0.1));
+            }
+        }
+
+        // ============================================
+        // CAMERA CONTROLS
+        // ============================================
+
+        let cameraTheta = Math.PI / 4;
+        let cameraPhi = Math.PI / 3;
+        let cameraRadius = 350;
+        let isDragging = false;
+        let lastMouse = { x: 0, y: 0 };
+
+        function updateCamera() {
+            camera.position.x = cameraRadius * Math.sin(cameraPhi) * Math.cos(cameraTheta);
+            camera.position.y = cameraRadius * Math.cos(cameraPhi);
+            camera.position.z = cameraRadius * Math.sin(cameraPhi) * Math.sin(cameraTheta);
+            camera.lookAt(0, 0, 0);
+        }
+
+        renderer.domElement.addEventListener('mousedown', e => {
+            isDragging = true;
+            lastMouse = { x: e.clientX, y: e.clientY };
+        });
+
+        renderer.domElement.addEventListener('mousemove', e => {
+            if (!isDragging) return;
+            cameraTheta -= (e.clientX - lastMouse.x) * 0.005;
+            cameraPhi = Math.max(0.1, Math.min(Math.PI - 0.1, cameraPhi + (e.clientY - lastMouse.y) * 0.005));
+            lastMouse = { x: e.clientX, y: e.clientY };
+            updateCamera();
+        });
+
+        renderer.domElement.addEventListener('mouseup', () => isDragging = false);
+        renderer.domElement.addEventListener('mouseleave', () => isDragging = false);
+        renderer.domElement.addEventListener('wheel', e => {
+            cameraRadius = Math.max(50, Math.min(800, cameraRadius + e.deltaY * 0.5));
+            updateCamera();
+        });
+
+        // ============================================
+        // UI CONTROLS
+        // ============================================
+
+        function togglePause() {
+            isPaused = !isPaused;
+            document.getElementById('btn-play').innerHTML = isPaused ? '▶ Play' : '⏸ Pause';
+            document.getElementById('btn-play').classList.toggle('active', !isPaused);
+        }
+
+        function toggleTrails() {
+            showTrails = !showTrails;
+            document.getElementById('btn-trails').classList.toggle('active', showTrails);
+            if (!showTrails) objects.forEach(o => o.trail = []);
+        }
+
+        function toggleForces() {
+            showForces = !showForces;
+            document.getElementById('btn-forces').classList.toggle('active', showForces);
+        }
+
+        function toggleLabels() {
+            showLabels = !showLabels;
+            document.getElementById('btn-labels').classList.toggle('active', showLabels);
+        }
+
+        function toggleGrid() {
+            showGrid = !showGrid;
+            document.getElementById('btn-grid').classList.toggle('active', showGrid);
+            
+            if (showGrid && !gridHelper) {
+                gridHelper = new THREE.GridHelper(400, 20, 0x333355, 0x222244);
+                scene.add(gridHelper);
+            } else if (!showGrid && gridHelper) {
+                scene.remove(gridHelper);
+                gridHelper = null;
+            }
+        }
+
+        function toggleObject(type) {
+            CONFIG.objects[type] = !CONFIG.objects[type];
+            document.getElementById(`obj-${type}`).classList.toggle('active', CONFIG.objects[type]);
+        }
+
+        function toggleDiscovery() {
+            discoveryMode = !discoveryMode;
+            document.getElementById('btn-discovery').innerHTML = discoveryMode ? '⏹ Arrêter Recherche' : '▶ Démarrer Recherche';
+            document.getElementById('btn-discovery').classList.toggle('success', !discoveryMode);
+            document.getElementById('btn-discovery').classList.toggle('warning', discoveryMode);
+            document.getElementById('discovery-status').classList.toggle('active', discoveryMode);
+            
+            if (discoveryMode) {
+                discoveryStartTime = Date.now();
+            }
+        }
+
+        function resetSimulation() {
+            const active = document.querySelector('.scenario-btn.active');
+            if (active) {
+                loadScenario(active.id.replace('sc-', ''));
+            }
+        }
+
+        function exportData(format) {
+            const data = objects.map(o => ({
+                id: o.id,
+                type: o.type,
+                mass: o.mass,
+                position: { x: o.position.x, y: o.position.y, z: o.position.z },
+                velocity: { x: o.velocity.x, y: o.velocity.y, z: o.velocity.z }
+            }));
+            
+            let content, filename, mimeType;
+            
+            if (format === 'json') {
+                content = JSON.stringify({ time: simTime, objects: data, phenomena }, null, 2);
+                filename = `janus_sim_${Date.now()}.json`;
+                mimeType = 'application/json';
+            } else {
+                const headers = 'id,type,mass,x,y,z,vx,vy,vz\n';
+                const rows = data.map(o => `${o.id},${o.type},${o.mass},${o.position.x},${o.position.y},${o.position.z},${o.velocity.x},${o.velocity.y},${o.velocity.z}`).join('\n');
+                content = headers + rows;
+                filename = `janus_sim_${Date.now()}.csv`;
+                mimeType = 'text/csv';
+            }
+            
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function takeScreenshot() {
+            renderer.render(scene, camera);
+            const link = document.createElement('a');
+            link.download = `janus_screenshot_${Date.now()}.png`;
+            link.href = renderer.domElement.toDataURL('image/png');
+            link.click();
+        }
+
+        // Slider handlers
+        document.getElementById('ctrl-timescale').addEventListener('input', function() {
+            CONFIG.timeScale = parseInt(this.value);
+            document.getElementById('timescale-value').textContent = `${CONFIG.timeScale} Ma/s`;
+        });
+
+        document.getElementById('ctrl-zoom').addEventListener('input', function() {
+            CONFIG.spatialScale = parseInt(this.value);
+            document.getElementById('zoom-value').textContent = `${CONFIG.spatialScale} Mpc`;
+            document.getElementById('scale-label').textContent = `${Math.round(CONFIG.spatialScale / 5)} Mpc`;
+        });
+
+        document.getElementById('ctrl-ratio').addEventListener('input', function() {
+            CONFIG.massRatio = parseFloat(this.value);
+            const pct = Math.round(CONFIG.massRatio / (CONFIG.massRatio + 1) * 100);
+            document.getElementById('ratio-value').textContent = `${pct}:${100-pct}`;
+        });
+
+        document.getElementById('ctrl-objects').addEventListener('input', function() {
+            CONFIG.nObjects = parseInt(this.value);
+            document.getElementById('objects-value').textContent = CONFIG.nObjects;
+        });
+
+        document.getElementById('ctrl-hubble').addEventListener('input', function() {
+            PHYSICS.H0 = parseInt(this.value);
+            document.getElementById('hubble-ctrl').textContent = PHYSICS.H0;
+            document.getElementById('hubble-value').textContent = `${PHYSICS.H0} km/s/Mpc`;
+        });
+
+        // ============================================
+        // ANIMATION LOOP
+        // ============================================
+
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            if (!isPaused && objects.length > 0) {
+                computeForces();
+                integrateMotion();
+                updateVisuals();
+                updateStatistics();
+                
+                simTime += CONFIG.dt * CONFIG.timeScale * 0.001;
+                
+                // Discovery analysis (every 30 frames)
+                if (frameCount % 30 === 0) {
+                    analyzeSimulation();
+                    updateCharts();
+                }
+                
+                // Update discovery timer
+                if (discoveryMode) {
+                    const elapsed = Math.floor((Date.now() - discoveryStartTime) / 1000);
+                    const hours = Math.floor(elapsed / 3600).toString().padStart(2, '0');
+                    const minutes = Math.floor((elapsed % 3600) / 60).toString().padStart(2, '0');
+                    const seconds = (elapsed % 60).toString().padStart(2, '0');
+                    document.getElementById('discovery-time').textContent = `${hours}:${minutes}:${seconds}`;
+                }
+            }
+            
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Initialize
+        updateCamera();
+        loadScenario('universe');
+        animate();
+    </script>
+</body>
+</html>

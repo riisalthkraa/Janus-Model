@@ -1,0 +1,2164 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JANUS — L'Univers Expliqué | Du Big Bang à Aujourd'hui</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --positive: #00d4ff;
+            --positive-dim: #0088aa;
+            --positive-glow: rgba(0, 212, 255, 0.4);
+            --negative: #ff6b35;
+            --negative-dim: #aa4420;
+            --negative-glow: rgba(255, 107, 53, 0.4);
+            --attraction: #00ff88;
+            --repulsion: #ff3366;
+            --validation: #ffcc00;
+            --singularity: #ffffff;
+            --inflation: #ff00ff;
+            --radiation: #ffff00;
+            --matter: #00ff00;
+            --dark-energy: #8800ff;
+            --bg-primary: #050810;
+            --bg-secondary: #0a1018;
+            --bg-panel: rgba(5, 8, 16, 0.95);
+            --border: rgba(0, 212, 255, 0.15);
+            --text-primary: #e6edf3;
+            --text-secondary: #7d8590;
+            --text-dim: #484f58;
+        }
+
+        body {
+            font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* === CANVAS CONTAINER === */
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 380px;
+            width: calc(100% - 760px);
+            height: 100vh;
+            z-index: 1;
+            background: radial-gradient(ellipse at center, #0a1525 0%, #050810 100%);
+        }
+
+        /* === LEFT PANEL === */
+        .panel-left {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 380px;
+            height: 100vh;
+            background: var(--bg-panel);
+            border-right: 1px solid var(--border);
+            z-index: 100;
+            overflow-y: auto;
+            backdrop-filter: blur(20px);
+        }
+
+        .panel-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(180deg, rgba(0,212,255,0.08) 0%, transparent 100%);
+        }
+
+        .panel-title {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            background: linear-gradient(90deg, var(--positive), var(--negative));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .panel-subtitle {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        .panel-section {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-title {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 12px;
+            height: 2px;
+            background: var(--positive);
+        }
+
+        /* === COSMIC TIMELINE === */
+        .timeline-container {
+            position: relative;
+            padding: 10px 0;
+        }
+
+        .timeline-track {
+            height: 40px;
+            background: linear-gradient(90deg, 
+                var(--singularity) 0%, 
+                var(--inflation) 5%, 
+                var(--radiation) 25%, 
+                var(--matter) 60%, 
+                var(--dark-energy) 100%
+            );
+            border-radius: 4px;
+            position: relative;
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        .timeline-progress {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: rgba(255,255,255,0.3);
+            pointer-events: none;
+            transition: width 0.1s;
+        }
+
+        .timeline-marker {
+            position: absolute;
+            top: -5px;
+            width: 3px;
+            height: 50px;
+            background: white;
+            transform: translateX(-50%);
+            box-shadow: 0 0 10px white;
+            pointer-events: none;
+        }
+
+        .timeline-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 9px;
+            font-family: 'IBM Plex Mono', monospace;
+            color: var(--text-dim);
+        }
+
+        .era-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            background: var(--bg-secondary);
+            border-radius: 6px;
+            margin-top: 12px;
+        }
+
+        .era-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .era-info h3 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .era-info p {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .era-bigbang .era-icon { background: radial-gradient(circle, #fff, #ff00ff); }
+        .era-inflation .era-icon { background: radial-gradient(circle, #ff00ff, #8800ff); }
+        .era-radiation .era-icon { background: radial-gradient(circle, #ffff00, #ff8800); }
+        .era-matter .era-icon { background: radial-gradient(circle, #00ff88, #0088ff); }
+        .era-dark .era-icon { background: radial-gradient(circle, #8800ff, #220044); }
+
+        /* === JANUS EXPLANATION === */
+        .janus-diagram {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .universe-card {
+            padding: 12px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .universe-card.positive {
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+        }
+
+        .universe-card.negative {
+            background: rgba(255, 107, 53, 0.1);
+            border: 1px solid rgba(255, 107, 53, 0.3);
+        }
+
+        .universe-card h4 {
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .universe-card.positive h4 { color: var(--positive); }
+        .universe-card.negative h4 { color: var(--negative); }
+
+        .universe-card p {
+            font-size: 10px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .interaction-rule {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: var(--bg-secondary);
+            border-radius: 4px;
+            margin-bottom: 8px;
+            font-size: 11px;
+        }
+
+        .rule-symbol {
+            font-size: 18px;
+            width: 30px;
+            text-align: center;
+        }
+
+        .rule-attract { color: var(--attraction); }
+        .rule-repel { color: var(--repulsion); }
+
+        /* === COSMIC METRICS === */
+        .metric-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .metric-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 12px;
+        }
+
+        .metric-label {
+            font-size: 9px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        .metric-value {
+            font-size: 18px;
+            font-weight: 600;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        .metric-unit {
+            font-size: 10px;
+            color: var(--text-secondary);
+            margin-left: 4px;
+        }
+
+        .metric-card.positive .metric-value { color: var(--positive); }
+        .metric-card.negative .metric-value { color: var(--negative); }
+        .metric-card.neutral .metric-value { color: var(--text-primary); }
+        .metric-card.expansion .metric-value { color: var(--dark-energy); }
+
+        /* === EQUATION DISPLAY === */
+        .equation-box {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 10px;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        .equation-name {
+            font-size: 9px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+
+        .equation-formula {
+            font-size: 14px;
+            color: var(--positive);
+            margin-bottom: 8px;
+        }
+
+        .equation-formula.negative { color: var(--negative); }
+
+        .equation-desc {
+            font-size: 10px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            font-family: 'IBM Plex Sans', sans-serif;
+        }
+
+        .equation-live {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid var(--border);
+            font-size: 11px;
+        }
+
+        .equation-live .label { color: var(--text-dim); }
+        .equation-live .value { color: var(--validation); font-weight: 600; }
+
+        /* === RIGHT PANEL === */
+        .panel-right {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 380px;
+            height: 100vh;
+            background: var(--bg-panel);
+            border-left: 1px solid var(--border);
+            z-index: 100;
+            overflow-y: auto;
+            backdrop-filter: blur(20px);
+        }
+
+        /* === CONTROLS === */
+        .control-group {
+            margin-bottom: 14px;
+        }
+
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            margin-bottom: 6px;
+        }
+
+        .control-label span:first-child { color: var(--text-secondary); }
+        .control-label .value { color: var(--positive); font-family: 'IBM Plex Mono', monospace; }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            background: var(--bg-secondary);
+            border-radius: 3px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--positive);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--positive-glow);
+        }
+
+        .btn-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 10px 12px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn:hover {
+            border-color: var(--positive);
+            background: rgba(0, 212, 255, 0.1);
+        }
+
+        .btn.active {
+            background: rgba(0, 212, 255, 0.15);
+            border-color: var(--positive);
+            color: var(--positive);
+        }
+
+        .btn.primary {
+            background: linear-gradient(135deg, var(--positive-dim), var(--positive));
+            border-color: var(--positive);
+            color: var(--bg-primary);
+            font-weight: 600;
+        }
+
+        .btn.full { grid-column: span 2; }
+
+        .btn.danger { border-color: var(--repulsion); color: var(--repulsion); }
+        .btn.danger:hover { background: rgba(255, 51, 102, 0.1); }
+
+        /* === WHAT'S HAPPENING PANEL === */
+        .happening-panel {
+            background: linear-gradient(135deg, rgba(0,212,255,0.1), rgba(255,107,53,0.1));
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+
+        .happening-title {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .happening-title::before {
+            content: '💡';
+        }
+
+        .happening-text {
+            font-size: 12px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+
+        .happening-text strong {
+            color: var(--text-primary);
+        }
+
+        /* === OBSERVATIONAL PROOF === */
+        .proof-item {
+            display: flex;
+            gap: 10px;
+            padding: 10px;
+            background: var(--bg-secondary);
+            border-radius: 6px;
+            margin-bottom: 8px;
+            align-items: flex-start;
+        }
+
+        .proof-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .proof-icon.success { background: rgba(0, 255, 136, 0.2); }
+        .proof-icon.active { background: rgba(255, 204, 0, 0.2); }
+
+        .proof-content h4 {
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .proof-content p {
+            font-size: 10px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        /* === OVERLAY CONTROLS === */
+        .overlay-controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .overlay-btn {
+            padding: 12px 20px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.2s;
+        }
+
+        .overlay-btn:hover {
+            border-color: var(--positive);
+            box-shadow: 0 0 20px var(--positive-glow);
+        }
+
+        .overlay-btn.active {
+            background: rgba(0, 212, 255, 0.2);
+            border-color: var(--positive);
+        }
+
+        /* === INFO OVERLAY === */
+        .info-overlay {
+            position: fixed;
+            top: 20px;
+            left: 400px;
+            right: 400px;
+            padding: 15px 20px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            z-index: 150;
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .info-group {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .info-item {
+            text-align: center;
+        }
+
+        .info-item .label {
+            font-size: 9px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 2px;
+        }
+
+        .info-item .value {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .info-item .value.time { color: var(--validation); }
+        .info-item .value.scale { color: var(--positive); }
+        .info-item .value.temp { color: var(--radiation); }
+
+        /* === BIG BANG INTRO OVERLAY === */
+        .bigbang-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at center, transparent, var(--bg-primary));
+            z-index: 500;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 1s;
+        }
+
+        .bigbang-overlay.visible {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .bigbang-overlay h1 {
+            font-size: 48px;
+            font-weight: 300;
+            letter-spacing: 10px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        .bigbang-overlay p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            max-width: 500px;
+            text-align: center;
+            line-height: 1.8;
+        }
+
+        .bigbang-overlay .start-btn {
+            margin-top: 30px;
+            padding: 15px 40px;
+            background: linear-gradient(135deg, var(--positive), var(--negative));
+            border: none;
+            border-radius: 30px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        /* === LEGEND === */
+        .legend-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 10px;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .legend-dot.positive { background: var(--positive); box-shadow: 0 0 8px var(--positive-glow); }
+        .legend-dot.negative { background: var(--negative); box-shadow: 0 0 8px var(--negative-glow); }
+        .legend-dot.attraction { background: var(--attraction); }
+        .legend-dot.repulsion { background: var(--repulsion); }
+        .legend-dot.structure { background: linear-gradient(45deg, var(--positive), var(--negative)); }
+        .legend-dot.void { background: var(--bg-primary); border: 1px solid var(--text-dim); }
+
+        /* === SCROLLBAR === */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--positive-dim); }
+
+        /* === PHASE INDICATOR === */
+        .phase-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .phase-badge.singularity { background: rgba(255,255,255,0.2); color: white; }
+        .phase-badge.inflation { background: rgba(255,0,255,0.2); color: var(--inflation); }
+        .phase-badge.radiation { background: rgba(255,255,0,0.2); color: var(--radiation); }
+        .phase-badge.matter { background: rgba(0,255,0,0.2); color: var(--matter); }
+        .phase-badge.dark { background: rgba(136,0,255,0.2); color: var(--dark-energy); }
+    </style>
+</head>
+<body>
+    <!-- Big Bang Introduction Overlay -->
+    <div class="bigbang-overlay visible" id="intro-overlay">
+        <h1>JANUS</h1>
+        <p>
+            Découvrez comment fonctionne l'univers selon le modèle cosmologique Janus de Jean-Pierre Petit.
+            Cette simulation vous emmène du Big Bang jusqu'à l'univers actuel, en montrant comment
+            la matière positive et négative interagissent pour créer tout ce que nous observons.
+        </p>
+        <button class="start-btn" onclick="startSimulation()">
+            Commencer le Big Bang
+        </button>
+    </div>
+
+    <!-- Left Panel - Understanding -->
+    <aside class="panel-left">
+        <div class="panel-header">
+            <div class="panel-title">MODÈLE JANUS</div>
+            <div class="panel-subtitle">Cosmologie Bimétrique • Du Big Bang à Aujourd'hui</div>
+        </div>
+
+        <!-- Cosmic Timeline -->
+        <div class="panel-section">
+            <div class="section-title">Voyage dans le Temps Cosmique</div>
+            
+            <div class="timeline-container">
+                <div class="timeline-track" id="timeline-track">
+                    <div class="timeline-progress" id="timeline-progress"></div>
+                    <div class="timeline-marker" id="timeline-marker"></div>
+                </div>
+                <div class="timeline-labels">
+                    <span>Big Bang</span>
+                    <span>380 000 ans</span>
+                    <span>9 Mrd ans</span>
+                    <span>Maintenant</span>
+                </div>
+            </div>
+
+            <div class="era-indicator era-bigbang" id="era-indicator">
+                <div class="era-icon">💥</div>
+                <div class="era-info">
+                    <h3 id="era-name">Singularité Initiale</h3>
+                    <p id="era-desc">L'univers naît d'un point infiniment dense</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- What's Happening Now -->
+        <div class="panel-section">
+            <div class="section-title">Ce Qui Se Passe</div>
+            
+            <div class="happening-panel">
+                <div class="happening-title">Observation en Cours</div>
+                <div class="happening-text" id="happening-text">
+                    <strong>Singularité :</strong> Au temps zéro, toute la matière et l'énergie de l'univers 
+                    est concentrée en un point. Les masses positives et négatives sont mélangées, 
+                    créant une densité et une température infinies.
+                </div>
+            </div>
+        </div>
+
+        <!-- Janus Model Explanation -->
+        <div class="panel-section">
+            <div class="section-title">Le Modèle Janus Expliqué</div>
+            
+            <div class="janus-diagram">
+                <div class="universe-card positive">
+                    <h4>Univers Positif</h4>
+                    <p>Notre matière visible. Étoiles, galaxies, vous et moi.</p>
+                </div>
+                <div class="universe-card negative">
+                    <h4>Univers Négatif</h4>
+                    <p>Matière "jumelle" invisible qui explique l'énergie noire.</p>
+                </div>
+            </div>
+
+            <div class="interaction-rule">
+                <span class="rule-symbol rule-attract">⟷</span>
+                <span><strong>Même signe = Attraction</strong><br><small style="color:var(--text-dim)">m⁺ ↔ m⁺ et m⁻ ↔ m⁻ s'attirent</small></span>
+            </div>
+            
+            <div class="interaction-rule">
+                <span class="rule-symbol rule-repel">⟺</span>
+                <span><strong>Signes opposés = Répulsion</strong><br><small style="color:var(--text-dim)">m⁺ ↔ m⁻ se repoussent</small></span>
+            </div>
+        </div>
+
+        <!-- Field Equations -->
+        <div class="panel-section">
+            <div class="section-title">Équations de Champ Janus</div>
+            
+            <div class="equation-box">
+                <div class="equation-name">Métrique Positive</div>
+                <div class="equation-formula">G⁺<sub>μν</sub> = κ ( T⁺<sub>μν</sub> − T⁻<sub>μν</sub> )</div>
+                <div class="equation-desc">
+                    La courbure de l'espace-temps positif dépend de la différence 
+                    entre les tenseurs énergie-impulsion des deux types de matière.
+                </div>
+                <div class="equation-live">
+                    <span class="label">Courbure actuelle</span>
+                    <span class="value" id="curvature-pos">—</span>
+                </div>
+            </div>
+            
+            <div class="equation-box">
+                <div class="equation-name">Métrique Négative</div>
+                <div class="equation-formula negative">G⁻<sub>μν</sub> = κ ( T⁻<sub>μν</sub> − T⁺<sub>μν</sub> )</div>
+                <div class="equation-desc">
+                    Symétrique mais inversée : la matière négative courbe son espace-temps 
+                    en fonction de la même différence.
+                </div>
+                <div class="equation-live">
+                    <span class="label">Courbure actuelle</span>
+                    <span class="value" id="curvature-neg">—</span>
+                </div>
+            </div>
+
+            <div class="equation-box">
+                <div class="equation-name">Facteur d'Échelle (Expansion)</div>
+                <div class="equation-formula">ȧ/a = H(t) = √(8πG/3 · ρ<sub>eff</sub>)</div>
+                <div class="equation-desc">
+                    Le paramètre de Hubble définit la vitesse d'expansion. Dans Janus, 
+                    ρ<sub>eff</sub> inclut la contribution des deux types de matière.
+                </div>
+                <div class="equation-live">
+                    <span class="label">H(t) actuel</span>
+                    <span class="value" id="hubble-param">—</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="panel-section">
+            <div class="section-title">Légende</div>
+            
+            <div class="legend-grid">
+                <div class="legend-item">
+                    <div class="legend-dot positive"></div>
+                    <span>Masse positive (m⁺)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot negative"></div>
+                    <span>Masse négative (m⁻)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot attraction"></div>
+                    <span>Force d'attraction</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot repulsion"></div>
+                    <span>Force de répulsion</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot structure"></div>
+                    <span>Structures cosmiques</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot void"></div>
+                    <span>Vides cosmiques</span>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Canvas Container -->
+    <div id="canvas-container"></div>
+
+    <!-- Info Overlay -->
+    <div class="info-overlay">
+        <div class="info-group">
+            <div class="info-item">
+                <div class="label">Temps Cosmique</div>
+                <div class="value time" id="cosmic-time">t = 0</div>
+            </div>
+            <div class="info-item">
+                <div class="label">Facteur d'Échelle</div>
+                <div class="value scale" id="scale-factor">a = 0</div>
+            </div>
+            <div class="info-item">
+                <div class="label">Température</div>
+                <div class="value temp" id="temperature">T = ∞</div>
+            </div>
+        </div>
+        <div class="info-group">
+            <div class="info-item">
+                <div class="label">Phase</div>
+                <span class="phase-badge singularity" id="phase-badge">Singularité</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overlay Controls -->
+    <div class="overlay-controls">
+        <button class="overlay-btn" id="btn-play">▶ Play</button>
+        <button class="overlay-btn" id="btn-slower">◀◀ Ralentir</button>
+        <button class="overlay-btn" id="btn-faster">▶▶ Accélérer</button>
+        <button class="overlay-btn" id="btn-reset">↻ Big Bang</button>
+        <button class="overlay-btn" id="btn-view">🔄 Vue 3D</button>
+    </div>
+
+    <!-- Right Panel - Data & Controls -->
+    <aside class="panel-right">
+        <div class="panel-header">
+            <div class="panel-title">DONNÉES & CONTRÔLES</div>
+            <div class="panel-subtitle">Observation en temps réel</div>
+        </div>
+
+        <!-- Cosmic Metrics -->
+        <div class="panel-section">
+            <div class="section-title">Métriques Cosmiques</div>
+            
+            <div class="metric-grid">
+                <div class="metric-card positive">
+                    <div class="metric-label">Masse Positive Totale</div>
+                    <div class="metric-value" id="total-mass-pos">0<span class="metric-unit">M☉</span></div>
+                </div>
+                <div class="metric-card negative">
+                    <div class="metric-label">Masse Négative Totale</div>
+                    <div class="metric-value" id="total-mass-neg">0<span class="metric-unit">M☉</span></div>
+                </div>
+                <div class="metric-card neutral">
+                    <div class="metric-label">Particules m⁺</div>
+                    <div class="metric-value" id="count-pos">0</div>
+                </div>
+                <div class="metric-card neutral">
+                    <div class="metric-label">Particules m⁻</div>
+                    <div class="metric-value" id="count-neg">0</div>
+                </div>
+                <div class="metric-card expansion">
+                    <div class="metric-label">Vitesse d'Expansion</div>
+                    <div class="metric-value" id="expansion-rate">0<span class="metric-unit">km/s/Mpc</span></div>
+                </div>
+                <div class="metric-card neutral">
+                    <div class="metric-label">Séparation m⁺/m⁻</div>
+                    <div class="metric-value" id="separation">0<span class="metric-unit">Mpc</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Energy Conservation -->
+        <div class="panel-section">
+            <div class="section-title">Conservation de l'Énergie</div>
+            
+            <div class="metric-grid">
+                <div class="metric-card neutral">
+                    <div class="metric-label">Énergie Cinétique</div>
+                    <div class="metric-value" id="kinetic-energy" style="color: var(--attraction);">0</div>
+                </div>
+                <div class="metric-card neutral">
+                    <div class="metric-label">Énergie Potentielle</div>
+                    <div class="metric-value" id="potential-energy" style="color: var(--repulsion);">0</div>
+                </div>
+                <div class="metric-card neutral" style="grid-column: span 2;">
+                    <div class="metric-label">Énergie Totale (doit rester ≈ constante)</div>
+                    <div class="metric-value" id="total-energy" style="color: var(--validation);">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Observational Proofs -->
+        <div class="panel-section">
+            <div class="section-title">Prédictions Vérifiées</div>
+            
+            <div class="proof-item">
+                <div class="proof-icon success">✓</div>
+                <div class="proof-content">
+                    <h4>Séparation Matière/Antimatière</h4>
+                    <p id="proof-separation-text">Les deux types de masses se séparent naturellement par répulsion mutuelle.</p>
+                </div>
+            </div>
+            
+            <div class="proof-item">
+                <div class="proof-icon active" id="proof-expansion-icon">⟳</div>
+                <div class="proof-content">
+                    <h4>Expansion Accélérée</h4>
+                    <p id="proof-expansion-text">L'univers s'étend de plus en plus vite, sans besoin d'énergie noire mystérieuse.</p>
+                </div>
+            </div>
+            
+            <div class="proof-item">
+                <div class="proof-icon success">✓</div>
+                <div class="proof-content">
+                    <h4>Formation de Structures</h4>
+                    <p>Les galaxies se forment par attraction des masses de même signe.</p>
+                </div>
+            </div>
+            
+            <div class="proof-item">
+                <div class="proof-icon success">✓</div>
+                <div class="proof-content">
+                    <h4>Vides Cosmiques</h4>
+                    <p>Les grandes régions vides entre les amas s'expliquent par la répulsion m⁺/m⁻.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Simulation Controls -->
+        <div class="panel-section">
+            <div class="section-title">Paramètres Physiques</div>
+            
+            <div class="control-group">
+                <div class="control-label">
+                    <span>Constante Gravitationnelle (G)</span>
+                    <span class="value" id="g-display">1.00</span>
+                </div>
+                <input type="range" id="ctrl-g" min="0.1" max="3" step="0.1" value="1">
+            </div>
+            
+            <div class="control-group">
+                <div class="control-label">
+                    <span>Vitesse de Simulation</span>
+                    <span class="value" id="speed-display">1.00×</span>
+                </div>
+                <input type="range" id="ctrl-speed" min="0.1" max="5" step="0.1" value="1">
+            </div>
+            
+            <div class="control-group">
+                <div class="control-label">
+                    <span>Nombre de Particules</span>
+                    <span class="value" id="particles-display">200</span>
+                </div>
+                <input type="range" id="ctrl-particles" min="50" max="500" step="50" value="200">
+            </div>
+        </div>
+
+        <!-- Visualization Options -->
+        <div class="panel-section">
+            <div class="section-title">Visualisation</div>
+            
+            <div class="btn-grid">
+                <button class="btn" id="toggle-forces">Forces</button>
+                <button class="btn" id="toggle-velocities">Vitesses</button>
+                <button class="btn active" id="toggle-trails">Trajectoires</button>
+                <button class="btn active" id="toggle-glow">Halo lumineux</button>
+                <button class="btn" id="toggle-field">Champ gravitationnel</button>
+                <button class="btn active" id="toggle-structures">Structures</button>
+            </div>
+        </div>
+
+        <!-- Scenario Selection -->
+        <div class="panel-section">
+            <div class="section-title">Scénarios</div>
+            
+            <div class="btn-grid">
+                <button class="btn active full" id="scenario-bigbang">💥 Big Bang Complet</button>
+                <button class="btn" id="scenario-galaxy">🌀 Formation Galaxie</button>
+                <button class="btn" id="scenario-cluster">✨ Amas de Galaxies</button>
+                <button class="btn" id="scenario-collision">💫 Collision</button>
+            </div>
+        </div>
+    </aside>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // ============================================================
+        // JANUS UNIVERSE SIMULATION - Complete Cosmological Model
+        // ============================================================
+
+        // === CONFIGURATION ===
+        const CONFIG = {
+            // Particle counts (will evolve during simulation)
+            N_POSITIVE: 100,
+            N_NEGATIVE: 100,
+            
+            // Physical constants (normalized)
+            G: 1.0,                    // Gravitational constant
+            SOFTENING: 2.0,            // Softening length to avoid singularities
+            DT: 0.016,                 // Time step
+            SPEED_SCALE: 1.0,          // Simulation speed multiplier
+            MAX_FORCE: 8.0,            // Maximum force clamp
+            DAMPING: 0.9995,           // Velocity damping
+            
+            // Cosmological parameters
+            INITIAL_SCALE: 0.01,       // Initial scale factor (Big Bang)
+            EXPANSION_RATE: 0.0001,    // Base expansion rate
+            HUBBLE_CONSTANT: 67.4,     // km/s/Mpc (for display)
+            
+            // Visual
+            BOUNDS: 150,
+            TRAIL_LENGTH: 80,
+            PARTICLE_SIZE: 1.5,
+            
+            // Mass ranges
+            MASS_RANGE: [0.5, 2.5]
+        };
+
+        // === COSMIC ERAS ===
+        const COSMIC_ERAS = [
+            {
+                id: 'singularity',
+                name: 'Singularité Initiale',
+                desc: 'Toute la matière concentrée en un point',
+                icon: '💥',
+                start: 0,
+                end: 0.001,
+                color: '#ffffff',
+                temperature: '∞ K',
+                happening: `<strong>Singularité :</strong> L'univers naît d'un point de densité infinie. 
+                    Matière positive et négative sont indistinctes, mélangées dans une soupe primordiale de pure énergie.`
+            },
+            {
+                id: 'inflation',
+                name: 'Inflation Cosmique',
+                desc: 'Expansion exponentielle ultra-rapide',
+                icon: '🌀',
+                start: 0.001,
+                end: 0.05,
+                color: '#ff00ff',
+                temperature: '10²⁷ K',
+                happening: `<strong>Inflation :</strong> L'univers s'étend de façon exponentielle en une fraction de seconde. 
+                    Les masses positives et négatives commencent à se différencier sous l'effet de fluctuations quantiques.`
+            },
+            {
+                id: 'radiation',
+                name: 'Ère de Radiation',
+                desc: 'Photons et particules légères dominent',
+                icon: '☀️',
+                start: 0.05,
+                end: 0.25,
+                color: '#ffff00',
+                temperature: '10⁹ K → 3000 K',
+                happening: `<strong>Radiation :</strong> L'univers est un plasma chaud de photons et particules. 
+                    Les masses de même signe commencent à s'attirer, formant les germes des futures structures.`
+            },
+            {
+                id: 'matter',
+                name: 'Ère de la Matière',
+                desc: 'Formation des structures cosmiques',
+                icon: '🌌',
+                start: 0.25,
+                end: 0.70,
+                color: '#00ff88',
+                temperature: '3000 K → 4 K',
+                happening: `<strong>Matière :</strong> Les atomes se forment, la lumière peut voyager librement. 
+                    Sous l'attraction gravitationnelle, les masses positives forment des amas qui deviendront des galaxies.
+                    Les masses négatives, repoussées, créent les grands vides cosmiques.`
+            },
+            {
+                id: 'dark',
+                name: 'Ère de l\'Énergie Noire',
+                desc: 'Expansion accélérée de l\'univers',
+                icon: '🔮',
+                start: 0.70,
+                end: 1.0,
+                color: '#8800ff',
+                temperature: '2.7 K',
+                happening: `<strong>Énergie Noire :</strong> La répulsion entre masses positives et négatives 
+                    prend le dessus sur l'attraction. L'expansion de l'univers <em>accélère</em>. 
+                    C'est ce que Janus explique sans invoquer d'énergie noire mystérieuse !`
+            }
+        ];
+
+        // === THREE.JS SETUP ===
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        
+        const camera = new THREE.PerspectiveCamera(
+            60,
+            container.clientWidth / container.clientHeight,
+            0.1,
+            2000
+        );
+        camera.position.set(0, 150, 300);
+        camera.lookAt(0, 0, 0);
+
+        const renderer = new THREE.WebGLRenderer({ 
+            antialias: true,
+            alpha: true
+        });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        container.appendChild(renderer.domElement);
+
+        // === LIGHTING ===
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+        scene.add(ambientLight);
+
+        const centralLight = new THREE.PointLight(0xffffff, 2, 500);
+        centralLight.position.set(0, 0, 0);
+        scene.add(centralLight);
+
+        // === PARTICLE SYSTEM ===
+        let particles = [];
+        let particleMeshes = [];
+        let trails = [];
+        let forceLines = new THREE.Group();
+        let velocityLines = new THREE.Group();
+        let structureLines = new THREE.Group();
+        scene.add(forceLines);
+        scene.add(velocityLines);
+        scene.add(structureLines);
+
+        // === STATE ===
+        let simulationStarted = false;
+        let isPaused = true;
+        let cosmicTime = 0;          // Normalized time (0 to 1 = full cosmic history)
+        let scaleFactor = CONFIG.INITIAL_SCALE;
+        let currentEra = COSMIC_ERAS[0];
+        let showForces = false;
+        let showVelocities = false;
+        let showTrails = true;
+        let showGlow = true;
+        let showField = false;
+        let showStructures = true;
+
+        // === PARTICLE CLASS ===
+        class Particle {
+            constructor(mass, position, velocity) {
+                this.mass = mass;
+                this.position = position.clone();
+                this.velocity = velocity.clone();
+                this.force = new THREE.Vector3();
+                this.trail = [];
+                this.age = 0;
+            }
+        }
+
+        // === CREATE SINGULARITY (Big Bang Initial State) ===
+        function createSingularity() {
+            // Clear existing
+            particles.length = 0;
+            particleMeshes.forEach(m => scene.remove(m));
+            particleMeshes.length = 0;
+            trails.forEach(t => scene.remove(t));
+            trails.length = 0;
+
+            cosmicTime = 0;
+            scaleFactor = CONFIG.INITIAL_SCALE;
+
+            // Create particles in a tiny sphere (singularity)
+            const singularityRadius = 0.5;
+            
+            // Positive particles
+            for (let i = 0; i < CONFIG.N_POSITIVE; i++) {
+                const mass = CONFIG.MASS_RANGE[0] + Math.random() * (CONFIG.MASS_RANGE[1] - CONFIG.MASS_RANGE[0]);
+                
+                // Random position in tiny sphere
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(2 * Math.random() - 1);
+                const r = Math.random() * singularityRadius;
+                
+                const pos = new THREE.Vector3(
+                    r * Math.sin(phi) * Math.cos(theta),
+                    r * Math.sin(phi) * Math.sin(theta),
+                    r * Math.cos(phi)
+                );
+                
+                // Outward velocity (Big Bang explosion)
+                const vel = pos.clone().normalize().multiplyScalar(0.5 + Math.random() * 0.5);
+                
+                const p = new Particle(mass, pos, vel);
+                particles.push(p);
+                
+                // Create mesh
+                const size = Math.cbrt(mass) * CONFIG.PARTICLE_SIZE;
+                const geometry = new THREE.SphereGeometry(size, 16, 16);
+                const material = new THREE.MeshStandardMaterial({
+                    color: 0x00d4ff,
+                    emissive: 0x00d4ff,
+                    emissiveIntensity: showGlow ? 0.5 : 0.1,
+                    metalness: 0.7,
+                    roughness: 0.3,
+                    transparent: true,
+                    opacity: 0.9
+                });
+                const mesh = new THREE.Mesh(geometry, material);
+                mesh.position.copy(pos);
+                scene.add(mesh);
+                particleMeshes.push(mesh);
+                
+                // Trail
+                const trailGeom = new THREE.BufferGeometry();
+                const trailMat = new THREE.LineBasicMaterial({
+                    color: 0x00d4ff,
+                    transparent: true,
+                    opacity: 0.3
+                });
+                const trail = new THREE.Line(trailGeom, trailMat);
+                trail.visible = showTrails;
+                scene.add(trail);
+                trails.push(trail);
+            }
+            
+            // Negative particles (slightly different initial distribution)
+            for (let i = 0; i < CONFIG.N_NEGATIVE; i++) {
+                const mass = -(CONFIG.MASS_RANGE[0] + Math.random() * (CONFIG.MASS_RANGE[1] - CONFIG.MASS_RANGE[0]));
+                
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(2 * Math.random() - 1);
+                const r = Math.random() * singularityRadius;
+                
+                const pos = new THREE.Vector3(
+                    r * Math.sin(phi) * Math.cos(theta),
+                    r * Math.sin(phi) * Math.sin(theta),
+                    r * Math.cos(phi)
+                );
+                
+                const vel = pos.clone().normalize().multiplyScalar(0.5 + Math.random() * 0.5);
+                
+                const p = new Particle(mass, pos, vel);
+                particles.push(p);
+                
+                const size = Math.cbrt(Math.abs(mass)) * CONFIG.PARTICLE_SIZE;
+                const geometry = new THREE.SphereGeometry(size, 16, 16);
+                const material = new THREE.MeshStandardMaterial({
+                    color: 0xff6b35,
+                    emissive: 0xff6b35,
+                    emissiveIntensity: showGlow ? 0.5 : 0.1,
+                    metalness: 0.7,
+                    roughness: 0.3,
+                    transparent: true,
+                    opacity: 0.9
+                });
+                const mesh = new THREE.Mesh(geometry, material);
+                mesh.position.copy(pos);
+                scene.add(mesh);
+                particleMeshes.push(mesh);
+                
+                const trailGeom = new THREE.BufferGeometry();
+                const trailMat = new THREE.LineBasicMaterial({
+                    color: 0xff6b35,
+                    transparent: true,
+                    opacity: 0.3
+                });
+                const trail = new THREE.Line(trailGeom, trailMat);
+                trail.visible = showTrails;
+                scene.add(trail);
+                trails.push(trail);
+            }
+            
+            // Create central glow (singularity effect)
+            createSingularityGlow();
+        }
+
+        let singularityGlow = null;
+
+        function createSingularityGlow() {
+            if (singularityGlow) {
+                scene.remove(singularityGlow);
+            }
+            
+            const geometry = new THREE.SphereGeometry(3, 32, 32);
+            const material = new THREE.MeshBasicMaterial({
+                color: 0xffffff,
+                transparent: true,
+                opacity: 1
+            });
+            singularityGlow = new THREE.Mesh(geometry, material);
+            scene.add(singularityGlow);
+        }
+
+        function updateSingularityGlow() {
+            if (!singularityGlow) return;
+            
+            // Fade out as universe expands
+            const opacity = Math.max(0, 1 - cosmicTime * 5);
+            singularityGlow.material.opacity = opacity;
+            
+            if (opacity <= 0 && singularityGlow.parent) {
+                scene.remove(singularityGlow);
+            }
+        }
+
+        // === JANUS PHYSICS ===
+        function computeJanusForces() {
+            // Reset forces
+            particles.forEach(p => p.force.set(0, 0, 0));
+            
+            // Compute N-body gravitational forces with Janus rules
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const p1 = particles[i];
+                    const p2 = particles[j];
+                    
+                    const r = p2.position.clone().sub(p1.position);
+                    const dist = Math.max(r.length(), CONFIG.SOFTENING);
+                    
+                    // JANUS RULE: F = G * m1 * m2 / r²
+                    // Same sign masses: m1*m2 > 0 → Attraction (positive force)
+                    // Opposite sign masses: m1*m2 < 0 → Repulsion (negative force)
+                    const forceMag = CONFIG.G * p1.mass * p2.mass / (dist * dist);
+                    
+                    // Clamp force to avoid numerical instability
+                    const clampedForce = Math.sign(forceMag) * Math.min(Math.abs(forceMag), CONFIG.MAX_FORCE);
+                    
+                    r.normalize();
+                    const force = r.multiplyScalar(clampedForce);
+                    
+                    // Apply forces (Newton's 3rd law)
+                    p1.force.add(force);
+                    p2.force.sub(force);
+                }
+            }
+            
+            // Add cosmic expansion effect
+            const expansionAccel = getExpansionAcceleration();
+            particles.forEach(p => {
+                // Hubble flow: particles move away from center proportionally to distance
+                const fromCenter = p.position.clone();
+                const expansionForce = fromCenter.multiplyScalar(expansionAccel * Math.abs(p.mass));
+                p.force.add(expansionForce);
+            });
+        }
+
+        function getExpansionAcceleration() {
+            // Expansion accelerates during dark energy era
+            const era = getCurrentEra();
+            let baseExpansion = CONFIG.EXPANSION_RATE;
+            
+            if (era.id === 'inflation') {
+                baseExpansion *= 50; // Rapid inflation
+            } else if (era.id === 'dark') {
+                baseExpansion *= 3;  // Accelerated expansion
+            }
+            
+            return baseExpansion * scaleFactor;
+        }
+
+        function integrateMotion() {
+            const dt = CONFIG.DT * CONFIG.SPEED_SCALE;
+            
+            particles.forEach((p, i) => {
+                // Acceleration = Force / |mass| (inertial mass is always positive)
+                const accel = p.force.clone().divideScalar(Math.abs(p.mass));
+                
+                // Velocity Verlet integration
+                p.velocity.add(accel.multiplyScalar(dt));
+                p.velocity.multiplyScalar(CONFIG.DAMPING);
+                p.position.add(p.velocity.clone().multiplyScalar(dt));
+                
+                // Soft boundary (push back gently)
+                const dist = p.position.length();
+                if (dist > CONFIG.BOUNDS * scaleFactor) {
+                    const excess = dist - CONFIG.BOUNDS * scaleFactor;
+                    p.position.multiplyScalar(1 - excess / dist * 0.1);
+                    p.velocity.multiplyScalar(0.95);
+                }
+                
+                // Update trail
+                p.trail.push(p.position.clone());
+                if (p.trail.length > CONFIG.TRAIL_LENGTH) {
+                    p.trail.shift();
+                }
+                
+                p.age++;
+            });
+        }
+
+        function updateVisuals() {
+            particles.forEach((p, i) => {
+                // Update mesh position
+                particleMeshes[i].position.copy(p.position);
+                
+                // Update glow based on era
+                const era = getCurrentEra();
+                let emissiveIntensity = showGlow ? 0.5 : 0.1;
+                
+                if (era.id === 'singularity' || era.id === 'inflation') {
+                    emissiveIntensity *= 2;
+                } else if (era.id === 'radiation') {
+                    emissiveIntensity *= 1.5;
+                }
+                
+                particleMeshes[i].material.emissiveIntensity = emissiveIntensity;
+                
+                // Update trail
+                if (showTrails && p.trail.length > 1) {
+                    const positions = new Float32Array(p.trail.length * 3);
+                    p.trail.forEach((pos, j) => {
+                        positions[j * 3] = pos.x;
+                        positions[j * 3 + 1] = pos.y;
+                        positions[j * 3 + 2] = pos.z;
+                    });
+                    trails[i].geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                    trails[i].geometry.computeBoundingSphere();
+                }
+                trails[i].visible = showTrails;
+            });
+            
+            updateForceVectors();
+            updateVelocityVectors();
+            updateStructureVisualization();
+            updateSingularityGlow();
+        }
+
+        function updateForceVectors() {
+            forceLines.clear();
+            if (!showForces) return;
+            
+            particles.forEach(p => {
+                if (p.force.length() < 0.01) return;
+                
+                const dir = p.force.clone().normalize();
+                const len = Math.min(p.force.length() * 5, 15);
+                
+                // Color based on attraction/repulsion
+                const isAttraction = (p.force.dot(p.position) < 0); // Force toward center
+                const color = isAttraction ? 0x00ff88 : 0xff3366;
+                
+                const points = [
+                    p.position.clone(),
+                    p.position.clone().add(dir.multiplyScalar(len))
+                ];
+                
+                const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                const material = new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.6 });
+                forceLines.add(new THREE.Line(geometry, material));
+            });
+        }
+
+        function updateVelocityVectors() {
+            velocityLines.clear();
+            if (!showVelocities) return;
+            
+            particles.forEach(p => {
+                if (p.velocity.length() < 0.1) return;
+                
+                const len = Math.min(p.velocity.length() * 3, 12);
+                const dir = p.velocity.clone().normalize();
+                
+                const points = [
+                    p.position.clone(),
+                    p.position.clone().add(dir.multiplyScalar(len))
+                ];
+                
+                const speed = p.velocity.length();
+                const hue = Math.min(speed / 10, 1) * 0.7;
+                const color = new THREE.Color().setHSL(hue, 1, 0.5);
+                
+                const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                const material = new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.6 });
+                velocityLines.add(new THREE.Line(geometry, material));
+            });
+        }
+
+        function updateStructureVisualization() {
+            structureLines.clear();
+            if (!showStructures) return;
+            
+            // Draw lines between nearby particles of same type (cosmic web effect)
+            const connectionDist = 30 * scaleFactor;
+            
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const p1 = particles[i];
+                    const p2 = particles[j];
+                    
+                    // Only connect same-sign masses
+                    if (Math.sign(p1.mass) !== Math.sign(p2.mass)) continue;
+                    
+                    const dist = p1.position.distanceTo(p2.position);
+                    if (dist > connectionDist) continue;
+                    
+                    const opacity = 0.15 * (1 - dist / connectionDist);
+                    const color = p1.mass > 0 ? 0x00d4ff : 0xff6b35;
+                    
+                    const points = [p1.position.clone(), p2.position.clone()];
+                    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                    const material = new THREE.LineBasicMaterial({ color, transparent: true, opacity });
+                    structureLines.add(new THREE.Line(geometry, material));
+                }
+            }
+        }
+
+        // === COSMIC ERA MANAGEMENT ===
+        function getCurrentEra() {
+            for (let i = COSMIC_ERAS.length - 1; i >= 0; i--) {
+                if (cosmicTime >= COSMIC_ERAS[i].start) {
+                    return COSMIC_ERAS[i];
+                }
+            }
+            return COSMIC_ERAS[0];
+        }
+
+        function updateEraDisplay() {
+            const era = getCurrentEra();
+            
+            if (era !== currentEra) {
+                currentEra = era;
+                
+                // Update era indicator
+                const indicator = document.getElementById('era-indicator');
+                indicator.className = 'era-indicator era-' + era.id;
+                document.querySelector('.era-icon').textContent = era.icon;
+                document.getElementById('era-name').textContent = era.name;
+                document.getElementById('era-desc').textContent = era.desc;
+                
+                // Update phase badge
+                const badge = document.getElementById('phase-badge');
+                badge.className = 'phase-badge ' + era.id;
+                badge.textContent = era.name;
+                
+                // Update happening text
+                document.getElementById('happening-text').innerHTML = era.happening;
+                
+                // Update scene background based on era
+                updateSceneBackground(era);
+            }
+            
+            // Update timeline
+            const progress = cosmicTime * 100;
+            document.getElementById('timeline-progress').style.width = progress + '%';
+            document.getElementById('timeline-marker').style.left = progress + '%';
+        }
+
+        function updateSceneBackground(era) {
+            let bgColor;
+            switch (era.id) {
+                case 'singularity':
+                    bgColor = new THREE.Color(0x1a0a20);
+                    centralLight.intensity = 5;
+                    break;
+                case 'inflation':
+                    bgColor = new THREE.Color(0x150820);
+                    centralLight.intensity = 3;
+                    break;
+                case 'radiation':
+                    bgColor = new THREE.Color(0x1a1505);
+                    centralLight.intensity = 2;
+                    break;
+                case 'matter':
+                    bgColor = new THREE.Color(0x050a15);
+                    centralLight.intensity = 1;
+                    break;
+                case 'dark':
+                    bgColor = new THREE.Color(0x050510);
+                    centralLight.intensity = 0.5;
+                    break;
+            }
+            scene.background = bgColor;
+        }
+
+        // === STATISTICS ===
+        function updateStatistics() {
+            const positive = particles.filter(p => p.mass > 0);
+            const negative = particles.filter(p => p.mass < 0);
+            
+            // Counts
+            document.getElementById('count-pos').textContent = positive.length;
+            document.getElementById('count-neg').textContent = negative.length;
+            
+            // Masses
+            const massPos = positive.reduce((sum, p) => sum + p.mass, 0);
+            const massNeg = Math.abs(negative.reduce((sum, p) => sum + p.mass, 0));
+            document.getElementById('total-mass-pos').innerHTML = massPos.toFixed(1) + '<span class="metric-unit">M☉</span>';
+            document.getElementById('total-mass-neg').innerHTML = massNeg.toFixed(1) + '<span class="metric-unit">M☉</span>';
+            
+            // Energy
+            let kineticEnergy = 0;
+            let potentialEnergy = 0;
+            
+            particles.forEach((p, i) => {
+                kineticEnergy += 0.5 * Math.abs(p.mass) * p.velocity.lengthSq();
+                
+                for (let j = i + 1; j < particles.length; j++) {
+                    const p2 = particles[j];
+                    const r = p.position.distanceTo(p2.position);
+                    potentialEnergy -= CONFIG.G * p.mass * p2.mass / Math.max(r, CONFIG.SOFTENING);
+                }
+            });
+            
+            document.getElementById('kinetic-energy').textContent = kineticEnergy.toFixed(1);
+            document.getElementById('potential-energy').textContent = potentialEnergy.toFixed(1);
+            document.getElementById('total-energy').textContent = (kineticEnergy + potentialEnergy).toFixed(1);
+            
+            // Separation distance
+            if (positive.length > 0 && negative.length > 0) {
+                const comPos = new THREE.Vector3();
+                const comNeg = new THREE.Vector3();
+                
+                positive.forEach(p => comPos.add(p.position.clone().multiplyScalar(p.mass)));
+                comPos.divideScalar(massPos);
+                
+                negative.forEach(p => comNeg.add(p.position.clone().multiplyScalar(Math.abs(p.mass))));
+                comNeg.divideScalar(massNeg);
+                
+                const separation = comPos.distanceTo(comNeg);
+                document.getElementById('separation').innerHTML = separation.toFixed(1) + '<span class="metric-unit">Mpc</span>';
+                
+                // Expansion rate (simplified)
+                const expansionRate = separation > 1 ? (separation * CONFIG.HUBBLE_CONSTANT / 100) : 0;
+                document.getElementById('expansion-rate').innerHTML = expansionRate.toFixed(1) + '<span class="metric-unit">km/s/Mpc</span>';
+            }
+            
+            // Update cosmic time display
+            const ageYears = cosmicTime * 13.8; // Billion years
+            let timeStr;
+            if (ageYears < 0.000001) {
+                timeStr = 't = 0 s';
+            } else if (ageYears < 0.0001) {
+                timeStr = 't ≈ ' + (ageYears * 1e6).toFixed(0) + ' ans';
+            } else if (ageYears < 0.001) {
+                timeStr = 't ≈ ' + (ageYears * 1e6).toFixed(0) + ' ans';
+            } else if (ageYears < 1) {
+                timeStr = 't ≈ ' + (ageYears * 1000).toFixed(0) + ' M ans';
+            } else {
+                timeStr = 't = ' + ageYears.toFixed(2) + ' Gyr';
+            }
+            document.getElementById('cosmic-time').textContent = timeStr;
+            
+            // Scale factor
+            document.getElementById('scale-factor').textContent = 'a = ' + scaleFactor.toFixed(3);
+            
+            // Temperature (simplified model)
+            const era = getCurrentEra();
+            document.getElementById('temperature').textContent = 'T ≈ ' + era.temperature;
+            
+            // Hubble parameter
+            const hubble = CONFIG.HUBBLE_CONSTANT * (1 + (1 - cosmicTime) * 5);
+            document.getElementById('hubble-param').textContent = hubble.toFixed(1) + ' km/s/Mpc';
+            
+            // Curvatures (visual approximation)
+            document.getElementById('curvature-pos').textContent = (massPos / (scaleFactor * 100)).toFixed(4);
+            document.getElementById('curvature-neg').textContent = (massNeg / (scaleFactor * 100)).toFixed(4);
+            
+            // Update proof icons
+            if (separation > 20) {
+                document.getElementById('proof-expansion-icon').textContent = '✓';
+                document.getElementById('proof-expansion-icon').className = 'proof-icon success';
+            }
+        }
+
+        // === CAMERA CONTROL ===
+        let cameraTheta = 0;
+        let cameraPhi = Math.PI / 3;
+        let cameraRadius = 300;
+        let isDragging = false;
+        let lastMouseX = 0;
+        let lastMouseY = 0;
+
+        function updateCamera() {
+            camera.position.x = cameraRadius * Math.sin(cameraPhi) * Math.cos(cameraTheta);
+            camera.position.y = cameraRadius * Math.cos(cameraPhi);
+            camera.position.z = cameraRadius * Math.sin(cameraPhi) * Math.sin(cameraTheta);
+            camera.lookAt(0, 0, 0);
+        }
+
+        renderer.domElement.addEventListener('mousedown', e => {
+            isDragging = true;
+            lastMouseX = e.clientX;
+            lastMouseY = e.clientY;
+        });
+
+        renderer.domElement.addEventListener('mousemove', e => {
+            if (!isDragging) return;
+            
+            const dx = e.clientX - lastMouseX;
+            const dy = e.clientY - lastMouseY;
+            
+            cameraTheta -= dx * 0.005;
+            cameraPhi = Math.max(0.1, Math.min(Math.PI - 0.1, cameraPhi + dy * 0.005));
+            
+            lastMouseX = e.clientX;
+            lastMouseY = e.clientY;
+            
+            updateCamera();
+        });
+
+        renderer.domElement.addEventListener('mouseup', () => isDragging = false);
+        renderer.domElement.addEventListener('mouseleave', () => isDragging = false);
+
+        renderer.domElement.addEventListener('wheel', e => {
+            cameraRadius = Math.max(50, Math.min(800, cameraRadius + e.deltaY * 0.5));
+            updateCamera();
+        });
+
+        // === UI CONTROLS ===
+        function setupControls() {
+            // Play/Pause
+            document.getElementById('btn-play').addEventListener('click', function() {
+                isPaused = !isPaused;
+                this.textContent = isPaused ? '▶ Play' : '⏸ Pause';
+                this.classList.toggle('active', !isPaused);
+            });
+            
+            // Speed controls
+            document.getElementById('btn-slower').addEventListener('click', () => {
+                CONFIG.SPEED_SCALE = Math.max(0.1, CONFIG.SPEED_SCALE / 2);
+                document.getElementById('speed-display').textContent = CONFIG.SPEED_SCALE.toFixed(2) + '×';
+                document.getElementById('ctrl-speed').value = CONFIG.SPEED_SCALE;
+            });
+            
+            document.getElementById('btn-faster').addEventListener('click', () => {
+                CONFIG.SPEED_SCALE = Math.min(5, CONFIG.SPEED_SCALE * 2);
+                document.getElementById('speed-display').textContent = CONFIG.SPEED_SCALE.toFixed(2) + '×';
+                document.getElementById('ctrl-speed').value = CONFIG.SPEED_SCALE;
+            });
+            
+            // Reset
+            document.getElementById('btn-reset').addEventListener('click', () => {
+                createSingularity();
+                updateEraDisplay();
+            });
+            
+            // View toggle
+            let viewMode = 0;
+            document.getElementById('btn-view').addEventListener('click', function() {
+                viewMode = (viewMode + 1) % 4;
+                switch (viewMode) {
+                    case 0: // 3D
+                        cameraPhi = Math.PI / 3;
+                        cameraTheta = Math.PI / 4;
+                        this.textContent = '🔄 Vue 3D';
+                        break;
+                    case 1: // Top
+                        cameraPhi = 0.01;
+                        cameraTheta = 0;
+                        this.textContent = '⬇ Vue Dessus';
+                        break;
+                    case 2: // Side
+                        cameraPhi = Math.PI / 2;
+                        cameraTheta = 0;
+                        this.textContent = '➡ Vue Côté';
+                        break;
+                    case 3: // Front
+                        cameraPhi = Math.PI / 2;
+                        cameraTheta = Math.PI / 2;
+                        this.textContent = '⬆ Vue Face';
+                        break;
+                }
+                updateCamera();
+            });
+            
+            // Sliders
+            document.getElementById('ctrl-g').addEventListener('input', function() {
+                CONFIG.G = parseFloat(this.value);
+                document.getElementById('g-display').textContent = CONFIG.G.toFixed(2);
+            });
+            
+            document.getElementById('ctrl-speed').addEventListener('input', function() {
+                CONFIG.SPEED_SCALE = parseFloat(this.value);
+                document.getElementById('speed-display').textContent = CONFIG.SPEED_SCALE.toFixed(2) + '×';
+            });
+            
+            document.getElementById('ctrl-particles').addEventListener('input', function() {
+                const n = parseInt(this.value);
+                CONFIG.N_POSITIVE = n / 2;
+                CONFIG.N_NEGATIVE = n / 2;
+                document.getElementById('particles-display').textContent = n;
+            });
+            
+            // Toggles
+            document.getElementById('toggle-forces').addEventListener('click', function() {
+                showForces = !showForces;
+                this.classList.toggle('active', showForces);
+            });
+            
+            document.getElementById('toggle-velocities').addEventListener('click', function() {
+                showVelocities = !showVelocities;
+                this.classList.toggle('active', showVelocities);
+            });
+            
+            document.getElementById('toggle-trails').addEventListener('click', function() {
+                showTrails = !showTrails;
+                this.classList.toggle('active', showTrails);
+                if (!showTrails) {
+                    particles.forEach(p => p.trail = []);
+                }
+            });
+            
+            document.getElementById('toggle-glow').addEventListener('click', function() {
+                showGlow = !showGlow;
+                this.classList.toggle('active', showGlow);
+                particleMeshes.forEach(m => {
+                    m.material.emissiveIntensity = showGlow ? 0.5 : 0.1;
+                });
+            });
+            
+            document.getElementById('toggle-field').addEventListener('click', function() {
+                showField = !showField;
+                this.classList.toggle('active', showField);
+            });
+            
+            document.getElementById('toggle-structures').addEventListener('click', function() {
+                showStructures = !showStructures;
+                this.classList.toggle('active', showStructures);
+            });
+            
+            // Scenarios
+            document.getElementById('scenario-bigbang').addEventListener('click', function() {
+                setActiveScenario(this);
+                createSingularity();
+            });
+            
+            document.getElementById('scenario-galaxy').addEventListener('click', function() {
+                setActiveScenario(this);
+                createGalaxyScenario();
+            });
+            
+            document.getElementById('scenario-cluster').addEventListener('click', function() {
+                setActiveScenario(this);
+                createClusterScenario();
+            });
+            
+            document.getElementById('scenario-collision').addEventListener('click', function() {
+                setActiveScenario(this);
+                createCollisionScenario();
+            });
+            
+            // Timeline click
+            document.getElementById('timeline-track').addEventListener('click', function(e) {
+                const rect = this.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                cosmicTime = x / rect.width;
+                scaleFactor = CONFIG.INITIAL_SCALE + cosmicTime * 10;
+                updateEraDisplay();
+            });
+        }
+
+        function setActiveScenario(btn) {
+            document.querySelectorAll('.panel-section:last-child .btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        // === ALTERNATIVE SCENARIOS ===
+        function createGalaxyScenario() {
+            particles.length = 0;
+            particleMeshes.forEach(m => scene.remove(m));
+            particleMeshes.length = 0;
+            trails.forEach(t => scene.remove(t));
+            trails.length = 0;
+            
+            cosmicTime = 0.5;
+            scaleFactor = 5;
+            
+            // Rotating disk of positive mass (galaxy)
+            for (let i = 0; i < CONFIG.N_POSITIVE; i++) {
+                const mass = CONFIG.MASS_RANGE[0] + Math.random() * (CONFIG.MASS_RANGE[1] - CONFIG.MASS_RANGE[0]);
+                const r = 10 + Math.random() * 50;
+                const theta = Math.random() * Math.PI * 2;
+                
+                const pos = new THREE.Vector3(
+                    r * Math.cos(theta),
+                    (Math.random() - 0.5) * 5,
+                    r * Math.sin(theta)
+                );
+                
+                // Orbital velocity
+                const speed = Math.sqrt(CONFIG.G * 50 / r) * 0.5;
+                const vel = new THREE.Vector3(
+                    -speed * Math.sin(theta),
+                    0,
+                    speed * Math.cos(theta)
+                );
+                
+                addParticle(mass, pos, vel, 0x00d4ff);
+            }
+            
+            // Surrounding negative mass (dark matter halo equivalent)
+            for (let i = 0; i < CONFIG.N_NEGATIVE; i++) {
+                const mass = -(CONFIG.MASS_RANGE[0] + Math.random() * (CONFIG.MASS_RANGE[1] - CONFIG.MASS_RANGE[0]));
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(2 * Math.random() - 1);
+                const r = 60 + Math.random() * 40;
+                
+                const pos = new THREE.Vector3(
+                    r * Math.sin(phi) * Math.cos(theta),
+                    r * Math.sin(phi) * Math.sin(theta),
+                    r * Math.cos(phi)
+                );
+                
+                const vel = new THREE.Vector3(
+                    (Math.random() - 0.5) * 0.3,
+                    (Math.random() - 0.5) * 0.3,
+                    (Math.random() - 0.5) * 0.3
+                );
+                
+                addParticle(mass, pos, vel, 0xff6b35);
+            }
+            
+            updateEraDisplay();
+        }
+
+        function createClusterScenario() {
+            particles.length = 0;
+            particleMeshes.forEach(m => scene.remove(m));
+            particleMeshes.length = 0;
+            trails.forEach(t => scene.remove(t));
+            trails.length = 0;
+            
+            cosmicTime = 0.6;
+            scaleFactor = 8;
+            
+            // Multiple clusters of positive mass
+            const clusterCenters = [
+                new THREE.Vector3(-40, 0, 0),
+                new THREE.Vector3(40, 0, 0),
+                new THREE.Vector3(0, 0, -40),
+                new THREE.Vector3(0, 0, 40)
+            ];
+            
+            clusterCenters.forEach(center => {
+                for (let i = 0; i < CONFIG.N_POSITIVE / 4; i++) {
+                    const mass = CONFIG.MASS_RANGE[0] + Math.random() * (CONFIG.MASS_RANGE[1] - CONFIG.MASS_RANGE[0]);
+                    const offset = new THREE.Vector3(
+                        (Math.random() - 0.5) * 30,
+                        (Math.random() - 0.5) * 30,
+                        (Math.random() - 0.5) * 30
+                    );
+                    const pos = center.clone().add(offset);
+                    const vel = new THREE.Vector3(
+                        (Math.random() - 0.5) * 0.5,
+                        (Math.random() - 0.5) * 0.5,
+                        (Math.random() - 0.5) * 0.5
+                    );
+                    addParticle(mass, pos, vel, 0x00d4ff);
+                }
+            });
+            
+            // Negative mass in voids between clusters
+            for (let i = 0; i < CONFIG.N_NEGATIVE; i++) {
+                const mass = -(CONFIG.MASS_RANGE[0] + Math.random() * (CONFIG.MASS_RANGE[1] - CONFIG.MASS_RANGE[0]));
+                const pos = new THREE.Vector3(
+                    (Math.random() - 0.5) * 150,
+                    (Math.random() - 0.5) * 150,
+                    (Math.random() - 0.5) * 150
+                );
+                const vel = new THREE.Vector3(
+                    (Math.random() - 0.5) * 0.3,
+                    (Math.random() - 0.5) * 0.3,
+                    (Math.random() - 0.5) * 0.3
+                );
+                addParticle(mass, pos, vel, 0xff6b35);
+            }
+            
+            updateEraDisplay();
+        }
+
+        function createCollisionScenario() {
+            particles.length = 0;
+            particleMeshes.forEach(m => scene.remove(m));
+            particleMeshes.length = 0;
+            trails.forEach(t => scene.remove(t));
+            trails.length = 0;
+            
+            cosmicTime = 0.4;
+            scaleFactor = 5;
+            
+            // Two clusters approaching each other
+            for (let i = 0; i < CONFIG.N_POSITIVE / 2; i++) {
+                const mass = CONFIG.MASS_RANGE[0] + Math.random() * (CONFIG.MASS_RANGE[1] - CONFIG.MASS_RANGE[0]);
+                const pos = new THREE.Vector3(
+                    -50 + (Math.random() - 0.5) * 20,
+                    (Math.random() - 0.5) * 20,
+                    (Math.random() - 0.5) * 20
+                );
+                const vel = new THREE.Vector3(2, 0, 0);
+                addParticle(mass, pos, vel, 0x00d4ff);
+            }
+            
+            for (let i = 0; i < CONFIG.N_POSITIVE / 2; i++) {
+                const mass = CONFIG.MASS_RANGE[0] + Math.random() * (CONFIG.MASS_RANGE[1] - CONFIG.MASS_RANGE[0]);
+                const pos = new THREE.Vector3(
+                    50 + (Math.random() - 0.5) * 20,
+                    (Math.random() - 0.5) * 20,
+                    (Math.random() - 0.5) * 20
+                );
+                const vel = new THREE.Vector3(-2, 0, 0);
+                addParticle(mass, pos, vel, 0x00d4ff);
+            }
+            
+            // Negative mass surrounding
+            for (let i = 0; i < CONFIG.N_NEGATIVE; i++) {
+                const mass = -(CONFIG.MASS_RANGE[0] + Math.random() * (CONFIG.MASS_RANGE[1] - CONFIG.MASS_RANGE[0]));
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(2 * Math.random() - 1);
+                const r = 70 + Math.random() * 30;
+                
+                const pos = new THREE.Vector3(
+                    r * Math.sin(phi) * Math.cos(theta),
+                    r * Math.sin(phi) * Math.sin(theta),
+                    r * Math.cos(phi)
+                );
+                const vel = new THREE.Vector3(0, 0, 0);
+                addParticle(mass, pos, vel, 0xff6b35);
+            }
+            
+            updateEraDisplay();
+        }
+
+        function addParticle(mass, pos, vel, color) {
+            const p = new Particle(mass, pos, vel);
+            particles.push(p);
+            
+            const size = Math.cbrt(Math.abs(mass)) * CONFIG.PARTICLE_SIZE;
+            const geometry = new THREE.SphereGeometry(size, 16, 16);
+            const material = new THREE.MeshStandardMaterial({
+                color: color,
+                emissive: color,
+                emissiveIntensity: showGlow ? 0.5 : 0.1,
+                metalness: 0.7,
+                roughness: 0.3,
+                transparent: true,
+                opacity: 0.9
+            });
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.position.copy(pos);
+            scene.add(mesh);
+            particleMeshes.push(mesh);
+            
+            const trailGeom = new THREE.BufferGeometry();
+            const trailMat = new THREE.LineBasicMaterial({
+                color: color,
+                transparent: true,
+                opacity: 0.3
+            });
+            const trail = new THREE.Line(trailGeom, trailMat);
+            trail.visible = showTrails;
+            scene.add(trail);
+            trails.push(trail);
+        }
+
+        // === ANIMATION LOOP ===
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            if (!isPaused && simulationStarted) {
+                // Update cosmic time
+                cosmicTime = Math.min(1, cosmicTime + 0.00005 * CONFIG.SPEED_SCALE);
+                scaleFactor = CONFIG.INITIAL_SCALE + cosmicTime * 10;
+                
+                // Physics
+                computeJanusForces();
+                integrateMotion();
+                
+                // Visuals
+                updateVisuals();
+                updateEraDisplay();
+                updateStatistics();
+            }
+            
+            renderer.render(scene, camera);
+        }
+
+        // === START SIMULATION ===
+        function startSimulation() {
+            document.getElementById('intro-overlay').classList.remove('visible');
+            simulationStarted = true;
+            isPaused = false;
+            document.getElementById('btn-play').textContent = '⏸ Pause';
+            document.getElementById('btn-play').classList.add('active');
+            createSingularity();
+            updateEraDisplay();
+        }
+
+        // === RESIZE HANDLER ===
+        window.addEventListener('resize', () => {
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height);
+        });
+
+        // === INITIALIZATION ===
+        setupControls();
+        updateCamera();
+        updateSceneBackground(COSMIC_ERAS[0]);
+        animate();
+
+        // Expose to window for button onclick
+        window.startSimulation = startSimulation;
+    </script>
+</body>
+</html>
