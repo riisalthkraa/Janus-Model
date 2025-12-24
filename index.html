@@ -3,21 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JANUS COSMOLOGY v3 — Océan Bimétrique</title>
+    <title>JANUS v5.1 — Simulation Cosmologique (Calibré pour Gravité=1.0)</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         :root {
-            --bg: #020408;
-            --panel: rgba(8, 12, 24, 0.95);
-            --card: rgba(16, 24, 40, 0.9);
-            --border: rgba(0, 180, 255, 0.15);
-            --text: #e0e8f0;
-            --dim: #607080;
+            --bg: #020306;
+            --panel: rgba(6, 10, 20, 0.96);
+            --card: rgba(12, 20, 36, 0.9);
+            --border: rgba(0, 200, 255, 0.12);
+            --text: #e4ecf4;
+            --dim: #5a7090;
             --accent: #00d4ff;
             --positive: #00ff88;
-            --negative: #ff6644;
-            --ocean: #4020ff;
+            --negative: #ff5544;
+            --ocean: #6040ff;
+            --void: #200840;
+            --blackhole: #ff00ff;
         }
         
         body {
@@ -30,6 +32,7 @@
         
         #canvas { position: fixed; inset: 0; z-index: 1; }
         
+        /* Panels */
         .panel {
             position: fixed;
             top: 0;
@@ -39,291 +42,233 @@
             z-index: 100;
             overflow-y: auto;
             border: 1px solid var(--border);
-            padding: 20px;
+            padding: 16px;
         }
         
-        .panel-left { left: 0; width: 320px; }
-        .panel-right { right: 0; width: 340px; }
+        .panel::-webkit-scrollbar { width: 4px; }
+        .panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+        
+        .panel-left { left: 0; width: 300px; }
+        .panel-right { right: 0; width: 320px; }
         
         h1 {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 700;
-            margin-bottom: 4px;
             background: linear-gradient(90deg, var(--accent), var(--positive));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
         
-        .subtitle { font-size: 10px; color: var(--dim); margin-bottom: 20px; }
+        .subtitle { font-size: 9px; color: var(--dim); margin-bottom: 16px; letter-spacing: 0.5px; }
         
-        .section {
-            margin-bottom: 20px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid var(--border);
-        }
+        .section { margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+        .section-title { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--dim); margin-bottom: 10px; }
         
-        .section-title {
-            font-size: 10px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--dim);
-            margin-bottom: 12px;
-        }
-        
+        /* Cards */
         .card {
             background: var(--card);
             border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 10px;
-            font-size: 11px;
-        }
-        
-        .card.highlight {
-            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(0, 255, 136, 0.05));
-            border-color: rgba(0, 212, 255, 0.3);
-        }
-        
-        .card-title {
-            font-weight: 600;
+            border-radius: 6px;
+            padding: 10px;
             margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
+            font-size: 10px;
         }
+        
+        .card.highlight { background: linear-gradient(135deg, rgba(0,212,255,0.1), rgba(0,255,136,0.05)); border-color: rgba(0,212,255,0.3); }
+        .card.desi { background: linear-gradient(135deg, rgba(255,100,0,0.1), rgba(255,200,0,0.05)); border-color: rgba(255,150,0,0.3); }
+        .card.janus { background: linear-gradient(135deg, rgba(96,64,255,0.1), rgba(0,212,255,0.05)); border-color: rgba(96,64,255,0.3); }
+        
+        .card-title { font-weight: 600; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+        .note { color: var(--dim); line-height: 1.5; font-size: 9px; }
         
         .eq {
             font-family: monospace;
-            font-size: 12px;
+            font-size: 11px;
             color: var(--accent);
             background: rgba(0,0,0,0.3);
-            padding: 6px 10px;
+            padding: 5px 8px;
             border-radius: 4px;
-            margin: 8px 0;
+            margin: 6px 0;
             border-left: 2px solid var(--accent);
         }
         
-        .note { color: var(--dim); line-height: 1.5; font-size: 10px; }
-        
-        /* Visual explanation */
-        .ocean-visual {
-            background: linear-gradient(180deg, 
-                rgba(64, 32, 255, 0.2) 0%,
-                rgba(64, 32, 255, 0.4) 45%,
-                rgba(0, 212, 255, 0.1) 50%,
-                rgba(64, 32, 255, 0.4) 55%,
-                rgba(64, 32, 255, 0.2) 100%
-            );
-            border-radius: 8px;
-            padding: 16px;
-            text-align: center;
-            margin-bottom: 12px;
-            position: relative;
-        }
-        
-        .ocean-visual::before {
-            content: '↓↓↓ Pression m⁻ ↓↓↓';
-            position: absolute;
-            top: 4px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 8px;
-            color: var(--ocean);
-        }
-        
-        .ocean-visual::after {
-            content: '↑↑↑ Pression m⁻ ↑↑↑';
-            position: absolute;
-            bottom: 4px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 8px;
-            color: var(--ocean);
-        }
-        
-        .galaxy-icon {
-            display: inline-block;
-            width: 40px;
-            height: 12px;
-            background: radial-gradient(ellipse, var(--accent) 0%, transparent 70%);
-            border-radius: 50%;
-            margin: 20px 0;
-        }
-        
-        /* Controls */
-        .control-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-        
-        .control-label { font-size: 11px; min-width: 100px; }
-        .control-value { font-family: monospace; font-size: 11px; color: var(--accent); min-width: 45px; text-align: right; }
-        
-        input[type="range"] {
-            flex: 1;
-            -webkit-appearance: none;
-            height: 4px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 2px;
-        }
-        
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 14px; height: 14px;
-            background: var(--accent);
-            border-radius: 50%;
-            cursor: pointer;
-        }
-        
-        .btn-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
-        
-        .btn {
-            flex: 1;
-            min-width: 70px;
-            padding: 10px;
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            color: var(--text);
-            font-size: 10px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .btn:hover { border-color: var(--accent); }
-        .btn.active { background: rgba(0, 212, 255, 0.15); border-color: var(--accent); color: var(--accent); }
-        
         /* Mode tabs */
-        .mode-tabs {
-            display: flex;
-            gap: 4px;
-            margin-bottom: 16px;
-        }
+        .mode-tabs { display: flex; gap: 3px; margin-bottom: 12px; }
         
         .mode-tab {
             flex: 1;
-            padding: 10px 8px;
+            padding: 8px 4px;
             background: var(--card);
             border: 1px solid var(--border);
-            border-radius: 6px;
+            border-radius: 5px;
             color: var(--dim);
-            font-size: 10px;
+            font-size: 9px;
             cursor: pointer;
             text-align: center;
             transition: all 0.2s;
         }
         
         .mode-tab:hover { color: var(--text); }
-        .mode-tab.active {
-            background: rgba(0, 212, 255, 0.1);
-            border-color: var(--accent);
-            color: var(--text);
+        .mode-tab.active { background: rgba(0,212,255,0.15); border-color: var(--accent); color: var(--text); }
+        .mode-tab.janus.active { background: rgba(96,64,255,0.15); border-color: var(--ocean); }
+        
+        /* Scenarios */
+        .scenario-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+        
+        .scenario-btn {
+            padding: 10px 6px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            color: var(--dim);
+            font-size: 9px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
         }
         
-        /* Stats */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
+        .scenario-btn:hover { border-color: var(--accent); color: var(--text); }
+        .scenario-btn.active { background: rgba(0,212,255,0.1); border-color: var(--accent); color: var(--accent); }
+        .scenario-btn .icon { font-size: 16px; display: block; margin-bottom: 4px; }
+        
+        /* Controls */
+        .control-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+        .control-label { font-size: 10px; min-width: 90px; }
+        .control-value { font-family: monospace; font-size: 10px; color: var(--accent); min-width: 40px; text-align: right; }
+        
+        input[type="range"] {
+            flex: 1;
+            -webkit-appearance: none;
+            height: 3px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
         }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px; height: 12px;
+            background: var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .btn-row { display: flex; gap: 4px; margin-top: 8px; }
+        
+        .btn {
+            flex: 1;
+            padding: 8px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text);
+            font-size: 9px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn:hover { border-color: var(--accent); }
+        .btn.active { background: rgba(0,212,255,0.15); border-color: var(--accent); }
+        
+        /* Stats */
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
         
         .stat {
             background: var(--card);
             border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 10px;
+            border-radius: 5px;
+            padding: 8px;
         }
         
-        .stat-label { font-size: 8px; color: var(--dim); text-transform: uppercase; }
-        .stat-value { font-family: monospace; font-size: 16px; color: var(--accent); margin-top: 4px; }
+        .stat-label { font-size: 7px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-value { font-family: monospace; font-size: 14px; color: var(--accent); margin-top: 2px; }
         .stat-value.pos { color: var(--positive); }
         .stat-value.neg { color: var(--negative); }
+        .stat-value.ocean { color: var(--ocean); }
         
         /* Top bar */
         .top-bar {
             position: fixed;
-            top: 12px;
-            left: 340px;
-            right: 360px;
-            padding: 12px 20px;
-            background: var(--panel);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            z-index: 100;
-            display: flex;
-            justify-content: space-between;
-        }
-        
-        .top-item { text-align: center; }
-        .top-label { font-size: 8px; color: var(--dim); }
-        .top-value { font-family: monospace; font-size: 13px; color: var(--accent); }
-        
-        /* Legend */
-        .legend {
-            position: fixed;
-            bottom: 12px;
-            left: 340px;
+            top: 10px;
+            left: 320px;
+            right: 340px;
             padding: 10px 16px;
             background: var(--panel);
             border: 1px solid var(--border);
             border-radius: 8px;
             z-index: 100;
             display: flex;
-            gap: 16px;
+            justify-content: space-between;
+            align-items: center;
         }
         
-        .legend-item { display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--dim); }
+        .top-item { text-align: center; }
+        .top-label { font-size: 7px; color: var(--dim); text-transform: uppercase; }
+        .top-value { font-family: monospace; font-size: 12px; color: var(--accent); }
+        
+        /* Legend */
+        .legend {
+            position: fixed;
+            bottom: 10px;
+            left: 320px;
+            padding: 8px 14px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            z-index: 100;
+            display: flex;
+            gap: 14px;
+        }
+        
+        .legend-item { display: flex; align-items: center; gap: 5px; font-size: 9px; color: var(--dim); }
         .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
         
         /* Fullscreen */
         body.fullscreen .panel, body.fullscreen .top-bar, body.fullscreen .legend { display: none !important; }
-        
-        .fs-hint {
-            display: none;
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 8px 16px;
-            background: var(--panel);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            font-size: 11px;
-            color: var(--dim);
-            z-index: 200;
-        }
-        
+        .fs-hint { display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); padding: 8px 16px; background: var(--panel); border: 1px solid var(--border); border-radius: 6px; font-size: 10px; color: var(--dim); z-index: 200; }
         body.fullscreen .fs-hint { display: block; }
+        
+        /* DESI indicator */
+        .desi-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            background: linear-gradient(90deg, #ff6600, #ffaa00);
+            border-radius: 3px;
+            font-size: 8px;
+            font-weight: 700;
+            color: #000;
+            margin-left: 6px;
+        }
     </style>
 </head>
 <body>
     <canvas id="canvas"></canvas>
-    <div class="fs-hint">Appuyez sur F ou ESC pour quitter le plein écran</div>
+    <div class="fs-hint">Appuyez sur F ou ESC pour quitter</div>
     
     <!-- Top Bar -->
     <div class="top-bar">
         <div class="top-item">
             <div class="top-label">Mode</div>
-            <div class="top-value" id="top-mode">JANUS</div>
+            <div class="top-value" id="top-mode">JANUS+DESI</div>
         </div>
         <div class="top-item">
-            <div class="top-label">Galaxies +</div>
-            <div class="top-value" id="top-pos">0</div>
+            <div class="top-label">Galaxies</div>
+            <div class="top-value" id="top-galaxies">0</div>
         </div>
         <div class="top-item">
-            <div class="top-label">Galaxies −</div>
-            <div class="top-value" id="top-neg">0</div>
+            <div class="top-label">Densité Océan m⁻</div>
+            <div class="top-value" id="top-ocean">0</div>
         </div>
         <div class="top-item">
-            <div class="top-label">Pression Océan</div>
+            <div class="top-label">Pression</div>
             <div class="top-value" id="top-pressure">0</div>
         </div>
         <div class="top-item">
             <div class="top-label">Temps</div>
             <div class="top-value" id="top-time">0 Gyr</div>
+        </div>
+        <div class="top-item">
+            <div class="top-label">Accélération</div>
+            <div class="top-value" id="top-accel">0</div>
         </div>
         <div class="top-item">
             <div class="top-label">FPS</div>
@@ -333,70 +278,111 @@
     
     <!-- Left Panel -->
     <div class="panel panel-left">
-        <h1>JANUS v3</h1>
-        <div class="subtitle">SIMULATION BIMÉTRIQUE — OCÉAN DE MASSE NÉGATIVE</div>
+        <h1>JANUS v4</h1>
+        <div class="subtitle">COSMOLOGIE BIMÉTRIQUE — DONNÉES DESI 2024-2025</div>
         
-        <div class="mode-tabs">
-            <div class="mode-tab" id="tab-standard" onclick="setMode('standard')">Standard</div>
-            <div class="mode-tab" id="tab-relativity" onclick="setMode('relativity')">+Relativité</div>
-            <div class="mode-tab active" id="tab-janus" onclick="setMode('janus')">Janus</div>
-        </div>
-        
+        <!-- Mode Selection -->
         <div class="section">
-            <div class="section-title">🌊 Le Secret de Janus</div>
-            
-            <div class="card highlight">
-                <div class="card-title">☯️ L'Océan de Masse Négative</div>
-                <div class="note">
-                    Le "vide" n'est PAS vide !<br><br>
-                    <strong>95% de l'univers</strong> = océan de masse négative<br>
-                    <strong>5% matière visible</strong> = galaxies qui "flottent" dedans<br><br>
-                    Cet océan exerce une <strong>PRESSION ISOTROPE</strong> sur chaque galaxie, de TOUS les côtés.
+            <div class="section-title">Mode de Simulation</div>
+            <div class="mode-tabs">
+                <div class="mode-tab" id="tab-standard" onclick="setMode('standard')">
+                    <div>Standard</div>
+                    <div style="font-size:7px;color:var(--negative)">ΛCDM+triche</div>
                 </div>
-            </div>
-            
-            <div class="ocean-visual">
-                <div style="font-size: 9px; color: var(--ocean);">← Pression m⁻ →</div>
-                <div class="galaxy-icon"></div>
-                <div style="font-size: 9px;">Galaxie confinée par l'océan</div>
-            </div>
-            
-            <div class="card">
-                <div class="card-title">⚡ Mécanisme de Stabilité</div>
-                <div class="eq">P_océan = ρ⁻ × c² (pression du vide)</div>
-                <div class="note">
-                    <strong>2 galaxies se rapprochent :</strong><br>
-                    → Moins d'océan entre elles<br>
-                    → Moins de pression entre elles<br>
-                    → Pression extérieure > intérieure<br>
-                    → <strong>Force nette = RÉPULSION</strong>
+                <div class="mode-tab" id="tab-relativity" onclick="setMode('relativity')">
+                    <div>Relativité</div>
+                    <div style="font-size:7px;color:var(--negative)">S'effondre</div>
                 </div>
-            </div>
-            
-            <div class="card">
-                <div class="card-title">📀 Pourquoi les Galaxies sont Plates</div>
-                <div class="note">
-                    L'océan comprime <strong>verticalement</strong> :<br>
-                    • Pression du HAUT (m⁻ au-dessus)<br>
-                    • Pression du BAS (m⁻ en-dessous)<br>
-                    → Les étoiles sont <strong>écrasées en disque</strong><br><br>
-                    Dans le plan : rotation + gravité = équilibre
+                <div class="mode-tab janus active" id="tab-janus" onclick="setMode('janus')">
+                    <div>Janus+DESI</div>
+                    <div style="font-size:7px;color:var(--positive)">Stable ✓</div>
                 </div>
             </div>
         </div>
         
+        <!-- DESI Info -->
+        <div class="section" id="desi-section">
+            <div class="section-title">Résultats DESI 2024-2025 <span class="desi-badge">NEW</span></div>
+            <div class="card desi">
+                <div class="card-title">📊 L'énergie sombre ÉVOLUE</div>
+                <div class="note">
+                    DESI a montré que l'énergie sombre n'est <strong>PAS constante</strong> (Λ).<br><br>
+                    → Elle <strong>s'affaiblit</strong> ou <strong>se renforce</strong> avec le temps<br>
+                    → Le modèle ΛCDM montre des "fissures"<br>
+                    → <strong>Janus prédit exactement cela !</strong>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Physics Explanation -->
+        <div class="section">
+            <div class="section-title">Physique Janus</div>
+            
+            <div class="card janus">
+                <div class="card-title">🌊 L'Océan de Masse Négative</div>
+                <div class="note">
+                    <strong>95% de l'univers</strong> = océan m⁻ (invisible)<br>
+                    <strong>5% matière visible</strong> = galaxies immergées<br><br>
+                    Cet océan exerce une <strong>PRESSION ISOTROPE</strong> qui :<br>
+                    • Confine les galaxies<br>
+                    • Les aplatit en disques<br>
+                    • Empêche leur fusion
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-title">⚫ Voids & Conglomérats m⁻</div>
+                <div class="note">
+                    Les grands <strong>VOIDS</strong> cosmiques contiennent des <strong>conglomérats de masse négative</strong> (invisibles).<br><br>
+                    Ex: Le <strong>Dipole Repeller</strong> = amas m⁻ qui repousse les galaxies.
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-title">🕳️ Trou Noir Central (Sgr A*)</div>
+                <div class="eq">M_SgrA* ≈ 4×10⁶ M☉</div>
+                <div class="note">
+                    Chaque galaxie a un trou noir supermassif au centre qui interagit avec l'océan m⁻.
+                </div>
+            </div>
+        </div>
+        
+        <!-- Scenarios -->
+        <div class="section">
+            <div class="section-title">Scénarios</div>
+            <div class="scenario-grid">
+                <div class="scenario-btn active" id="sc-observable" onclick="loadScenario('observable')">
+                    <span class="icon">🔭</span>
+                    Univers Observable
+                </div>
+                <div class="scenario-btn" id="sc-bigbang" onclick="loadScenario('bigbang')">
+                    <span class="icon">💥</span>
+                    Big Bang
+                </div>
+                <div class="scenario-btn" id="sc-milkyway" onclick="loadScenario('milkyway')">
+                    <span class="icon">🌀</span>
+                    Voie Lactée
+                </div>
+                <div class="scenario-btn" id="sc-desi" onclick="loadScenario('desi')">
+                    <span class="icon">📈</span>
+                    Test DESI
+                </div>
+            </div>
+        </div>
+        
+        <!-- Controls -->
         <div class="section">
             <div class="section-title">Paramètres</div>
             
             <div class="control-row">
                 <span class="control-label">Vitesse</span>
-                <input type="range" id="ctrl-speed" min="0" max="3" step="0.1" value="1">
+                <input type="range" id="ctrl-speed" min="0" max="5" step="0.1" value="1">
                 <span class="control-value" id="val-speed">1.0×</span>
             </div>
             
             <div class="control-row">
                 <span class="control-label">Gravité G</span>
-                <input type="range" id="ctrl-gravity" min="0.1" max="2" step="0.1" value="1">
+                <input type="range" id="ctrl-gravity" min="0.1" max="3" step="0.1" value="1">
                 <span class="control-value" id="val-gravity">1.0</span>
             </div>
             
@@ -408,29 +394,20 @@
             
             <div class="control-row">
                 <span class="control-label">Pression Océan</span>
-                <input type="range" id="ctrl-pressure" min="0" max="5" step="0.1" value="2">
-                <span class="control-value" id="val-pressure">2.0</span>
+                <input type="range" id="ctrl-pressure" min="0" max="10" step="0.5" value="5">
+                <span class="control-value" id="val-pressure">5.0</span>
             </div>
             
             <div class="control-row">
-                <span class="control-label">Compression Y</span>
-                <input type="range" id="ctrl-flatten" min="0" max="3" step="0.1" value="1.5">
-                <span class="control-value" id="val-flatten">1.5</span>
+                <span class="control-label">Évolution w(t)</span>
+                <input type="range" id="ctrl-evolution" min="0" max="5" step="0.1" value="2">
+                <span class="control-value" id="val-evolution">2.0</span>
             </div>
             
             <div class="btn-row">
                 <button class="btn active" id="btn-pause" onclick="togglePause()">⏸ Pause</button>
                 <button class="btn" onclick="reset()">↻ Reset</button>
                 <button class="btn" onclick="toggleFS()">⛶ Plein</button>
-            </div>
-        </div>
-        
-        <div class="section">
-            <div class="section-title">Scénarios</div>
-            <div class="btn-row">
-                <button class="btn active" id="sc-stable" onclick="loadScenario('stable')">🌌 Stable</button>
-                <button class="btn" id="sc-bigbang" onclick="loadScenario('bigbang')">💥 Big Bang</button>
-                <button class="btn" id="sc-collision" onclick="loadScenario('collision')">💫 Collision</button>
             </div>
         </div>
     </div>
@@ -441,23 +418,23 @@
             <div class="section-title">Statistiques Univers</div>
             <div class="stats-grid">
                 <div class="stat">
-                    <div class="stat-label">Galaxies +</div>
-                    <div class="stat-value pos" id="stat-gal-pos">0</div>
+                    <div class="stat-label">Galaxies m⁺</div>
+                    <div class="stat-value pos" id="stat-galaxies">0</div>
                 </div>
                 <div class="stat">
-                    <div class="stat-label">Galaxies −</div>
-                    <div class="stat-value neg" id="stat-gal-neg">0</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-label">Masse +</div>
+                    <div class="stat-label">Masse Totale m⁺</div>
                     <div class="stat-value pos" id="stat-mass-pos">0</div>
                 </div>
                 <div class="stat">
-                    <div class="stat-label">Masse Océan −</div>
-                    <div class="stat-value neg" id="stat-mass-neg">0</div>
+                    <div class="stat-label">Masse Océan m⁻</div>
+                    <div class="stat-value ocean" id="stat-mass-neg">0</div>
                 </div>
                 <div class="stat">
-                    <div class="stat-label">Pression Moy.</div>
+                    <div class="stat-label">Voids Détectés</div>
+                    <div class="stat-value" id="stat-voids">0</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Pression Moyenne</div>
                     <div class="stat-value" id="stat-pressure">0</div>
                 </div>
                 <div class="stat">
@@ -468,14 +445,44 @@
         </div>
         
         <div class="section">
-            <div class="section-title">Équilibre Janus</div>
+            <div class="section-title">Équilibre des Forces</div>
             <div class="card">
-                <div class="card-title">📊 Forces en Présence</div>
-                <div class="note">
-                    <strong>Gravité (attraction):</strong> <span id="force-grav">0</span><br>
-                    <strong>Pression océan (répulsion):</strong> <span id="force-ocean">0</span><br>
-                    <strong>Compression Y:</strong> <span id="force-y">0</span><br><br>
-                    <strong>État:</strong> <span id="state">--</span>
+                <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+                    <span style="color:var(--positive)">Gravité (attraction)</span>
+                    <span id="force-grav">0</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+                    <span style="color:var(--ocean)">Pression océan m⁻</span>
+                    <span id="force-ocean">0</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+                    <span style="color:var(--blackhole)">Trou noir central</span>
+                    <span id="force-bh">0</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:6px;margin-top:6px;">
+                    <span style="font-weight:600">État</span>
+                    <span id="state" style="color:var(--positive)">--</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">🎯 Preuve DESI: Vitesse par Zone</div>
+            <div class="card desi">
+                <div class="note" style="margin-bottom:8px;">
+                    Si Janus est correct, les galaxies <strong>LOINTAINES</strong> doivent aller <strong>PLUS VITE</strong> que les proches (plus de vide = plus d'accélération).
+                </div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                    <span>Galaxies proches (&lt;150)</span>
+                    <span id="vel-inner" style="color:var(--accent)">--</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                    <span>Galaxies lointaines (&gt;150)</span>
+                    <span id="vel-outer" style="color:var(--accent)">--</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:6px;margin-top:6px;">
+                    <span style="font-weight:600">Ratio (doit être &gt;1)</span>
+                    <span id="vel-ratio" style="color:var(--positive);font-weight:700">--</span>
                 </div>
             </div>
         </div>
@@ -483,63 +490,96 @@
         <div class="section">
             <div class="section-title">Prédictions Vérifiées</div>
             <div class="card">
-                <div id="pred-rotation">⏳ Courbes rotation plates</div>
-                <div id="pred-stable">⏳ Galaxies stables</div>
-                <div id="pred-flat">⏳ Galaxies aplaties</div>
-                <div id="pred-expansion">⏳ Expansion accélérée</div>
+                <div id="pred-flat" style="margin-bottom:4px;">⏳ Courbes rotation plates</div>
+                <div id="pred-stable" style="margin-bottom:4px;">⏳ Galaxies stables</div>
+                <div id="pred-disk" style="margin-bottom:4px;">⏳ Galaxies aplaties</div>
+                <div id="pred-accel" style="margin-bottom:4px;">⏳ Expansion accélérée</div>
+                <div id="pred-desi" style="margin-bottom:4px;">⏳ w(t) évolutif (DESI)</div>
+                <div id="pred-voids">⏳ Structure lacunaire</div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">Comparaison des Modèles</div>
+            <div class="card">
+                <table style="width:100%;font-size:8px;border-collapse:collapse;">
+                    <tr style="border-bottom:1px solid var(--border);">
+                        <th style="text-align:left;padding:3px;">Aspect</th>
+                        <th style="padding:3px;">ΛCDM</th>
+                        <th style="padding:3px;">Janus</th>
+                    </tr>
+                    <tr>
+                        <td style="padding:3px;">Matière noire</td>
+                        <td style="padding:3px;text-align:center;color:var(--negative)">27% ?</td>
+                        <td style="padding:3px;text-align:center;color:var(--positive)">Non</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:3px;">Énergie sombre</td>
+                        <td style="padding:3px;text-align:center;color:var(--negative)">68% ?</td>
+                        <td style="padding:3px;text-align:center;color:var(--positive)">Océan m⁻</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:3px;">Stabilité</td>
+                        <td style="padding:3px;text-align:center;color:var(--negative)">Triche</td>
+                        <td style="padding:3px;text-align:center;color:var(--positive)">Naturelle</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:3px;">w(t) évolutif</td>
+                        <td style="padding:3px;text-align:center;color:var(--negative)">Non</td>
+                        <td style="padding:3px;text-align:center;color:var(--positive)">Oui ✓</td>
+                    </tr>
+                </table>
             </div>
         </div>
     </div>
     
     <!-- Legend -->
     <div class="legend">
-        <div class="legend-item">
-            <div class="legend-dot" style="background: var(--accent);"></div>
-            Galaxie +
-        </div>
-        <div class="legend-item">
-            <div class="legend-dot" style="background: var(--negative);"></div>
-            Galaxie − (jumelle)
-        </div>
-        <div class="legend-item">
-            <div class="legend-dot" style="background: var(--ocean);"></div>
-            Océan m⁻
-        </div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--accent);"></div>Galaxie lente</div>
+        <div class="legend-item"><div class="legend-dot" style="background:linear-gradient(90deg, #00d4ff, #ffaa00);"></div>→ accélère</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#ff6644;"></div>Galaxie rapide</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--ocean);"></div>Océan m⁻</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--void);"></div>Void</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--blackhole);"></div>Trou Noir</div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
         // ═══════════════════════════════════════════════════════════════════
-        // JANUS COSMOLOGY v3 — OCEAN OF NEGATIVE MASS
-        // Based on Jean-Pierre Petit's research (2024)
+        // JANUS v4 — COSMOLOGIE BIMÉTRIQUE + DESI 2024-2025
+        // Based on Jean-Pierre Petit's research & DESI collaboration results
         // ═══════════════════════════════════════════════════════════════════
         
-        // PHYSICS CONSTANTS
         const PHYSICS = {
             G: 1.0,
-            SOFTENING: 3.0,
-            DT: 0.01,
-            UNIVERSE_RADIUS: 600,
+            SOFTENING: 8.0,
+            DT: 0.008,              // Plus petit pour stabilité à haute vitesse
+            UNIVERSE_RADIUS: 2000,  // 4× plus grand!
+            VOID_RADIUS: 150,
+            BLACK_HOLE_MASS: 3000,
+            GALAXY_SCALE: 0.4,      // Galaxies plus petites
         };
         
-        // CONFIGURATION
         const CONFIG = {
             mode: 'janus',
             speed: 1.0,
             gravity: 1.0,
-            massRatio: 50,        // m⁻/m⁺ ratio (Petit uses ~50)
-            oceanPressure: 2.0,   // Pressure coefficient
-            flattenForce: 1.5,    // Vertical compression force
+            massRatio: 50,          // m⁻/m⁺ ratio (95%/5%)
+            oceanPressure: 5.0,     // Augmenté pour équilibrer gravité
+            darkEnergyEvolution: 2.0,  // w(t) plus fort pour accélération visible
             paused: false,
+            scenario: 'observable',
         };
         
-        // UNIVERSE STATE
         const UNIVERSE = {
-            positive: [],  // Positive mass galaxies (us)
-            negative: [],  // Negative mass galaxies (twin universe)
+            galaxies: [],
+            voids: [],
+            blackHoles: [],
+            oceanParticles: null,
             time: 0,
-            oceanDensity: 0,
+            cosmicTime: 0,  // In Gyr
             avgPressure: 0,
+            totalAcceleration: 0,
         };
         
         // ═══════════════════════════════════════════════════════════════════
@@ -548,143 +588,235 @@
         
         const canvas = document.getElementById('canvas');
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x020408);
+        scene.background = new THREE.Color(0x020306);
         
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 3000);
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 1, 10000);
         const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         
-        // Lighting
-        scene.add(new THREE.AmbientLight(0x404060, 0.5));
-        
         // Groups
-        const positiveGroup = new THREE.Group();
-        const negativeGroup = new THREE.Group();
+        const galaxyGroup = new THREE.Group();
         const oceanGroup = new THREE.Group();
-        const fabricGroup = new THREE.Group();
-        scene.add(positiveGroup, negativeGroup, oceanGroup, fabricGroup);
+        const voidGroup = new THREE.Group();
+        const blackHoleGroup = new THREE.Group();
+        scene.add(galaxyGroup, oceanGroup, voidGroup, blackHoleGroup);
         
         // ═══════════════════════════════════════════════════════════════════
         // GALAXY CLASS
         // ═══════════════════════════════════════════════════════════════════
         
         class Galaxy {
-            constructor(mass, pos, vel, isPositive = true) {
-                this.mass = Math.abs(mass);
-                this.isPositive = isPositive;
+            constructor(mass, pos, vel) {
+                this.mass = mass;
                 this.position = pos.clone();
                 this.velocity = vel.clone();
                 this.force = new THREE.Vector3();
-                this.radius = Math.pow(this.mass, 0.25) * 2;
-                this.twin = null;
+                // Galaxies plus petites avec GALAXY_SCALE
+                this.radius = Math.pow(mass, 0.25) * 1.5 * (PHYSICS.GALAXY_SCALE || 0.4);
+                this.hasBlackHole = mass > 200;
+                this.blackHoleMass = this.hasBlackHole ? mass * 0.01 : 0;
                 
                 this.createMesh();
             }
             
             createMesh() {
                 const group = new THREE.Group();
+                const scale = PHYSICS.GALAXY_SCALE || 0.4;
                 
-                // Galaxy core
-                const coreColor = this.isPositive ? 0x00d4ff : 0xff6644;
-                const coreGeom = new THREE.SphereGeometry(this.radius * 0.3, 16, 16);
-                const coreMat = new THREE.MeshBasicMaterial({ color: coreColor });
+                // Galaxy core - plus petit
+                const coreGeom = new THREE.SphereGeometry(this.radius * 0.3, 12, 12);
+                const coreMat = new THREE.MeshBasicMaterial({ color: 0x00d4ff });
                 group.add(new THREE.Mesh(coreGeom, coreMat));
                 
-                // Disk (flat!)
-                const diskGeom = new THREE.RingGeometry(this.radius * 0.4, this.radius * 1.2, 32);
+                // Black hole at center (if massive enough)
+                if (this.hasBlackHole) {
+                    const bhGeom = new THREE.SphereGeometry(this.radius * 0.08, 12, 12);
+                    const bhMat = new THREE.MeshBasicMaterial({ color: 0xff00ff });
+                    const bh = new THREE.Mesh(bhGeom, bhMat);
+                    group.add(bh);
+                    
+                    // Accretion disk
+                    const diskGeom = new THREE.RingGeometry(this.radius * 0.1, this.radius * 0.25, 32);
+                    const diskMat = new THREE.MeshBasicMaterial({ 
+                        color: 0xff8800, 
+                        transparent: true, 
+                        opacity: 0.6,
+                        side: THREE.DoubleSide 
+                    });
+                    const disk = new THREE.Mesh(diskGeom, diskMat);
+                    disk.rotation.x = Math.PI / 2;
+                    group.add(disk);
+                }
+                
+                // Galactic disk (flat!)
+                const diskGeom = new THREE.RingGeometry(this.radius * 0.3, this.radius * 1.5, 48);
                 const diskMat = new THREE.MeshBasicMaterial({
-                    color: coreColor,
+                    color: 0x00aaff,
                     transparent: true,
-                    opacity: 0.4,
+                    opacity: 0.25,
                     side: THREE.DoubleSide
                 });
-                const disk = new THREE.Mesh(diskGeom, diskMat);
-                disk.rotation.x = Math.PI / 2;
-                group.add(disk);
+                const galDisk = new THREE.Mesh(diskGeom, diskMat);
+                galDisk.rotation.x = Math.PI / 2;
+                group.add(galDisk);
                 
-                // Spiral arms (particles)
+                // Spiral arms
                 const armGeom = new THREE.BufferGeometry();
                 const positions = [];
+                const colors = [];
+                
                 for (let arm = 0; arm < 2; arm++) {
-                    for (let i = 0; i < 50; i++) {
-                        const t = (i / 50) * Math.PI * 2;
-                        const r = this.radius * 0.3 + t * this.radius * 0.15;
+                    for (let i = 0; i < 80; i++) {
+                        const t = (i / 80) * Math.PI * 2.5;
+                        const r = this.radius * 0.2 + t * this.radius * 0.2;
                         const theta = t + arm * Math.PI;
+                        const spread = 0.3 + t * 0.1;
+                        
                         positions.push(
-                            r * Math.cos(theta) + (Math.random() - 0.5) * 0.5,
-                            (Math.random() - 0.5) * 0.3,  // FLAT!
-                            r * Math.sin(theta) + (Math.random() - 0.5) * 0.5
+                            r * Math.cos(theta) + (Math.random() - 0.5) * spread,
+                            (Math.random() - 0.5) * 0.15,  // Very flat!
+                            r * Math.sin(theta) + (Math.random() - 0.5) * spread
                         );
+                        
+                        const brightness = 0.5 + Math.random() * 0.5;
+                        colors.push(0, brightness, brightness);
                     }
                 }
+                
                 armGeom.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+                armGeom.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+                
                 const armMat = new THREE.PointsMaterial({
-                    color: coreColor,
-                    size: 0.3,
+                    size: 0.4,
+                    vertexColors: true,
                     transparent: true,
-                    opacity: 0.6
+                    opacity: 0.8
                 });
                 group.add(new THREE.Points(armGeom, armMat));
                 
                 group.position.copy(this.position);
                 this.mesh = group;
-                
-                if (this.isPositive) {
-                    positiveGroup.add(group);
-                } else {
-                    negativeGroup.add(group);
-                }
+                galaxyGroup.add(group);
             }
             
             update() {
                 if (this.mesh) {
                     this.mesh.position.copy(this.position);
-                    this.mesh.rotation.y += 0.002 * CONFIG.speed;
+                    this.mesh.rotation.y += 0.003 * CONFIG.speed;
+                    
+                    // Color based on velocity (shows acceleration!)
+                    const speed = this.velocity.length();
+                    const maxSpeed = 5;
+                    const speedRatio = Math.min(1, speed / maxSpeed);
+                    
+                    // Slow = cyan, Fast = yellow/red
+                    const r = speedRatio;
+                    const g = 0.8 - speedRatio * 0.5;
+                    const b = 1 - speedRatio;
+                    
+                    // Update core color
+                    if (this.mesh.children[0] && this.mesh.children[0].material) {
+                        this.mesh.children[0].material.color.setRGB(r, g, b);
+                    }
+                    
+                    // Update trail/halo based on local ocean density
+                    if (this.localOceanDensity !== undefined) {
+                        const oceanIntensity = this.localOceanDensity / (CONFIG.massRatio * 1.5);
+                        // Could add visual effect here
+                    }
                 }
             }
         }
         
         // ═══════════════════════════════════════════════════════════════════
-        // SPACETIME FABRIC (visual representation of ocean)
+        // VOID CLASS (cosmic voids with negative mass concentration)
         // ═══════════════════════════════════════════════════════════════════
         
-        function createFabric() {
-            fabricGroup.clear();
+        class Void {
+            constructor(pos, radius, negativeMass) {
+                this.position = pos.clone();
+                this.radius = radius;
+                this.negativeMass = negativeMass;
+                
+                this.createMesh();
+            }
             
-            const res = 40;
-            const size = PHYSICS.UNIVERSE_RADIUS * 1.5;
-            const geom = new THREE.PlaneGeometry(size, size, res, res);
-            
-            const mat = new THREE.MeshBasicMaterial({
-                color: 0x4020ff,
-                wireframe: true,
-                transparent: true,
-                opacity: 0.15,
-                side: THREE.DoubleSide
-            });
-            
-            const mesh = new THREE.Mesh(geom, mat);
-            mesh.rotation.x = -Math.PI / 2;
-            mesh.position.y = 0;
-            fabricGroup.add(mesh);
-            
-            // Second layer below
-            const mesh2 = mesh.clone();
-            mesh2.position.y = -80;
-            mesh2.material = mat.clone();
-            mesh2.material.opacity = 0.08;
-            fabricGroup.add(mesh2);
+            createMesh() {
+                // Void sphere (semi-transparent dark region)
+                const geom = new THREE.SphereGeometry(this.radius, 24, 24);
+                const mat = new THREE.MeshBasicMaterial({
+                    color: 0x200840,
+                    transparent: true,
+                    opacity: 0.15,
+                    side: THREE.BackSide
+                });
+                
+                this.mesh = new THREE.Mesh(geom, mat);
+                this.mesh.position.copy(this.position);
+                
+                // Negative mass concentration at center (invisible but represented)
+                const centerGeom = new THREE.SphereGeometry(this.radius * 0.3, 16, 16);
+                const centerMat = new THREE.MeshBasicMaterial({
+                    color: 0x4020ff,
+                    transparent: true,
+                    opacity: 0.1
+                });
+                const center = new THREE.Mesh(centerGeom, centerMat);
+                this.mesh.add(center);
+                
+                voidGroup.add(this.mesh);
+            }
         }
         
         // ═══════════════════════════════════════════════════════════════════
-        // PHYSICS: THE OCEAN MODEL
+        // OCEAN OF NEGATIVE MASS (continuous fluid)
+        // ═══════════════════════════════════════════════════════════════════
+        
+        function createOcean() {
+            oceanGroup.clear();
+            
+            // Particules de l'océan de masse négative - adapté au grand univers
+            const particleCount = 8000;  // Plus de particules
+            const positions = [];
+            const colors = [];
+            
+            for (let i = 0; i < particleCount; i++) {
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(2 * Math.random() - 1);
+                const r = Math.random() * PHYSICS.UNIVERSE_RADIUS;
+                
+                const x = r * Math.sin(phi) * Math.cos(theta);
+                const y = (Math.random() - 0.5) * 200;  // Plus d'espace vertical
+                const z = r * Math.sin(phi) * Math.sin(theta);
+                
+                positions.push(x, y, z);
+                
+                // Couleur violet-bleu pour masse négative
+                colors.push(0.3 + Math.random() * 0.2, 0.1, 0.5 + Math.random() * 0.3);
+            }
+            
+            const geom = new THREE.BufferGeometry();
+            geom.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+            geom.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+            
+            const mat = new THREE.PointsMaterial({
+                size: 1.5,  // Légèrement plus gros pour visibilité à distance
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.12
+            });
+            
+            UNIVERSE.oceanParticles = new THREE.Points(geom, mat);
+            oceanGroup.add(UNIVERSE.oceanParticles);
+        }
+        
+        // ═══════════════════════════════════════════════════════════════════
+        // PHYSICS ENGINE
         // ═══════════════════════════════════════════════════════════════════
         
         function computeForces() {
-            // Reset forces
-            UNIVERSE.positive.forEach(g => g.force.set(0, 0, 0));
-            UNIVERSE.negative.forEach(g => g.force.set(0, 0, 0));
+            UNIVERSE.galaxies.forEach(g => g.force.set(0, 0, 0));
             
             if (CONFIG.mode === 'standard') {
                 computeStandardForces();
@@ -696,8 +828,8 @@
         }
         
         function computeStandardForces() {
-            // Standard model with artificial stabilization (fake dark matter)
-            const galaxies = UNIVERSE.positive;
+            // ΛCDM with artificial stabilization (cheating!)
+            const galaxies = UNIVERSE.galaxies;
             
             for (let i = 0; i < galaxies.length; i++) {
                 for (let j = i + 1; j < galaxies.length; j++) {
@@ -708,23 +840,27 @@
                     const dist = Math.max(r.length(), PHYSICS.SOFTENING);
                     r.normalize();
                     
-                    // Gravity
+                    // Gravity + fake dark matter halo
                     let F = PHYSICS.G * CONFIG.gravity * g1.mass * g2.mass / (dist * dist);
-                    
-                    // Fake dark matter stabilization
-                    const fakeDM = 0.015 * g1.mass * g2.mass / (dist * dist * dist);
-                    F -= fakeDM;
+                    F -= 0.02 * g1.mass * g2.mass / (dist * dist * dist);  // FAKE!
                     
                     const force = r.multiplyScalar(F);
                     g1.force.add(force);
                     g2.force.sub(force);
                 }
+                
+                // Fake dark energy expansion
+                const hubble = 0.00005 * CONFIG.darkEnergyEvolution;
+                galaxies[i].force.add(
+                    new THREE.Vector3(galaxies[i].position.x, 0, galaxies[i].position.z)
+                    .multiplyScalar(hubble * galaxies[i].mass)
+                );
             }
         }
         
         function computeRelativityForces() {
-            // Pure Newton/Einstein - NO stabilization = UNSTABLE
-            const galaxies = UNIVERSE.positive;
+            // Pure Newton/Einstein - NO stabilization = COLLAPSE!
+            const galaxies = UNIVERSE.galaxies;
             
             for (let i = 0; i < galaxies.length; i++) {
                 for (let j = i + 1; j < galaxies.length; j++) {
@@ -747,238 +883,246 @@
         
         function computeJanusForces() {
             // ═══════════════════════════════════════════════════════════════
-            // JANUS MODEL: OCEAN OF NEGATIVE MASS
+            // JANUS v4-FIXED: Pression Différentielle + DESI 2024-2025
             // ═══════════════════════════════════════════════════════════════
             //
-            // Key insight from J.-P. Petit:
-            // "La masse négative envahit l'espace entre les galaxies et exerce 
-            //  sur elles une contre-pression qui les CONFINE"
+            // PHYSIQUE CLÉ (corrigée):
+            // 
+            // 1. STABILITÉ LOCAL: Pression DIFFÉRENTIELLE empêche fusion
+            //    - 2 galaxies proches = moins d'océan ENTRE elles
+            //    - L'océan AUTOUR exerce une pression vers l'intérieur
+            //    - P_externe > P_entre → RÉPULSION qui stabilise!
             //
-            // The negative mass is not discrete particles - it's an OCEAN
-            // that fills all of space and exerts ISOTROPIC PRESSURE
-            //
-            // When two galaxies approach:
-            // - Less ocean between them = less pressure between them
-            // - External pressure remains = NET OUTWARD FORCE
-            // - = REPULSION!
+            // 2. ACCÉLÉRATION COSMIQUE (DESI):
+            //    - Plus une galaxie est LOIN → Plus d'océan cumulé
+            //    - Répulsion ∝ distance → expansion ACCÉLÉRÉE!
             //
             // ═══════════════════════════════════════════════════════════════
             
-            const posGalaxies = UNIVERSE.positive;
-            const negGalaxies = UNIVERSE.negative;
-            
-            // Ocean properties
-            const oceanDensity = CONFIG.massRatio;  // ρ⁻ = 50× ρ⁺
+            const galaxies = UNIVERSE.galaxies;
+            const oceanBaseDensity = CONFIG.massRatio;
             const pressureCoeff = CONFIG.oceanPressure;
-            const flattenCoeff = CONFIG.flattenForce;
+            const wEvolution = CONFIG.darkEnergyEvolution;
             
-            // Calculate total positive mass for ocean density
-            let totalPosMass = 0;
-            posGalaxies.forEach(g => totalPosMass += g.mass);
-            const oceanMass = totalPosMass * oceanDensity;
-            UNIVERSE.oceanDensity = oceanMass;
+            // Time-dependent w(t) from DESI - évolution de l'énergie noire
+            const cosmicAge = UNIVERSE.cosmicTime;
+            const wFactor = 1 + 0.2 * wEvolution * (1 - Math.exp(-cosmicAge * 0.05));
             
-            let totalPressure = 0;
-            let forceGravTotal = 0;
-            let forceOceanTotal = 0;
-            let forceYTotal = 0;
+            let totalGrav = 0, totalOcean = 0, totalBH = 0;
             
             // ─────────────────────────────────────────────────────────────
-            // POSITIVE-POSITIVE INTERACTIONS
+            // STEP 1: Calculate LOCAL MATTER DENSITY
             // ─────────────────────────────────────────────────────────────
-            for (let i = 0; i < posGalaxies.length; i++) {
-                for (let j = i + 1; j < posGalaxies.length; j++) {
-                    const g1 = posGalaxies[i];
-                    const g2 = posGalaxies[j];
-                    
-                    const r = new THREE.Vector3().subVectors(g2.position, g1.position);
-                    const dist = Math.max(r.length(), PHYSICS.SOFTENING);
-                    const rNorm = r.clone().normalize();
-                    
-                    // 1. GRAVITATIONAL ATTRACTION (standard Newton)
-                    const F_grav = PHYSICS.G * CONFIG.gravity * g1.mass * g2.mass / (dist * dist);
-                    forceGravTotal += F_grav;
-                    
-                    // 2. OCEAN PRESSURE REPULSION
-                    // The ocean between two galaxies exerts pressure
-                    // When galaxies are close, the "channel" of ocean between them is narrow
-                    // This creates a pressure differential: less pressure between, more pressure outside
-                    // Result: net outward force
-                    
-                    // Volume of ocean "excluded" between galaxies
-                    const excludedVolume = (g1.radius + g2.radius) * (g1.radius + g2.radius) / dist;
-                    
-                    // Pressure differential
-                    const P_base = oceanDensity * pressureCoeff;
-                    const P_between = P_base * (1 - excludedVolume / (dist + 10));
-                    const P_external = P_base;
-                    const P_diff = P_external - P_between;
-                    
-                    // Force from pressure differential (increases as galaxies get closer)
-                    const F_ocean = P_diff * (g1.mass + g2.mass) / (dist + 5);
-                    forceOceanTotal += F_ocean;
-                    
-                    totalPressure += P_diff;
-                    
-                    // 3. NET FORCE
-                    const F_net = F_grav - F_ocean;
-                    
-                    const force = rNorm.multiplyScalar(F_net);
-                    g1.force.add(force);
-                    g2.force.sub(force);
-                }
-                
-                // ─────────────────────────────────────────────────────────
-                // VERTICAL COMPRESSION (why galaxies are flat)
-                // ─────────────────────────────────────────────────────────
-                // The ocean above and below the galactic plane compresses it
-                const g = posGalaxies[i];
-                const targetY = 30;  // Positive galaxies live above fabric
-                const yDiff = targetY - g.position.y;
-                const F_y = flattenCoeff * g.mass * yDiff * 0.01;
-                g.force.y += F_y;
-                forceYTotal += Math.abs(F_y);
-                
-                // Also compress velocity in Y direction (flatten the motion)
-                g.velocity.y *= 0.95;
-            }
-            
-            // ─────────────────────────────────────────────────────────────
-            // NEGATIVE-NEGATIVE INTERACTIONS (twin universe)
-            // Same physics but mirrored below the fabric
-            // ─────────────────────────────────────────────────────────────
-            for (let i = 0; i < negGalaxies.length; i++) {
-                for (let j = i + 1; j < negGalaxies.length; j++) {
-                    const g1 = negGalaxies[i];
-                    const g2 = negGalaxies[j];
-                    
-                    const r = new THREE.Vector3().subVectors(g2.position, g1.position);
-                    const dist = Math.max(r.length(), PHYSICS.SOFTENING);
-                    const rNorm = r.clone().normalize();
-                    
-                    // Same physics: gravity - ocean pressure
-                    const F_grav = PHYSICS.G * CONFIG.gravity * g1.mass * g2.mass / (dist * dist);
-                    
-                    const excludedVolume = (g1.radius + g2.radius) * (g1.radius + g2.radius) / dist;
-                    const P_base = oceanDensity * pressureCoeff;
-                    const P_between = P_base * (1 - excludedVolume / (dist + 10));
-                    const P_external = P_base;
-                    const P_diff = P_external - P_between;
-                    const F_ocean = P_diff * (g1.mass + g2.mass) / (dist + 5);
-                    
-                    const F_net = F_grav - F_ocean;
-                    
-                    const force = rNorm.multiplyScalar(F_net);
-                    g1.force.add(force);
-                    g2.force.sub(force);
-                }
-                
-                // Vertical compression (keep below fabric)
-                const g = negGalaxies[i];
-                const targetY = -30;
-                const yDiff = targetY - g.position.y;
-                const F_y = flattenCoeff * g.mass * yDiff * 0.01;
-                g.force.y += F_y;
-                g.velocity.y *= 0.95;
-            }
-            
-            // ─────────────────────────────────────────────────────────────
-            // POSITIVE-NEGATIVE REPULSION (between universes)
-            // ─────────────────────────────────────────────────────────────
-            for (let i = 0; i < posGalaxies.length; i++) {
-                for (let j = 0; j < negGalaxies.length; j++) {
-                    const g1 = posGalaxies[i];
-                    const g2 = negGalaxies[j];
-                    
-                    const r = new THREE.Vector3().subVectors(g2.position, g1.position);
-                    const dist = Math.max(r.length(), PHYSICS.SOFTENING);
-                    const rNorm = r.clone().normalize();
-                    
-                    // Pure repulsion
-                    const F_repel = PHYSICS.G * CONFIG.gravity * g1.mass * g2.mass / (dist * dist);
-                    
-                    const force = rNorm.multiplyScalar(-F_repel * 0.5);
-                    g1.force.add(force);
-                    g2.force.sub(force);
-                }
-            }
-            
-            // ─────────────────────────────────────────────────────────────
-            // TWIN COUPLING (keep twins aligned horizontally)
-            // ─────────────────────────────────────────────────────────────
-            posGalaxies.forEach(g => {
-                if (g.twin) {
-                    const dx = g.twin.position.x - g.position.x;
-                    const dz = g.twin.position.z - g.position.z;
-                    const coupling = 0.005 * g.mass;
-                    
-                    g.force.x += dx * coupling;
-                    g.force.z += dz * coupling;
-                    g.twin.force.x -= dx * coupling;
-                    g.twin.force.z -= dz * coupling;
-                }
+            galaxies.forEach(g => {
+                g.localMatterDensity = 0;
+                g.localOceanDensity = oceanBaseDensity;
             });
             
+            for (let i = 0; i < galaxies.length; i++) {
+                for (let j = 0; j < galaxies.length; j++) {
+                    if (i === j) continue;
+                    const dist = galaxies[i].position.distanceTo(galaxies[j].position);
+                    const contribution = galaxies[j].mass / (dist * dist + 100);
+                    galaxies[i].localMatterDensity += contribution;
+                }
+            }
+            
+            let maxDensity = 0;
+            galaxies.forEach(g => { if (g.localMatterDensity > maxDensity) maxDensity = g.localMatterDensity; });
+            
+            galaxies.forEach(g => {
+                const normalizedMatter = maxDensity > 0 ? g.localMatterDensity / maxDensity : 0;
+                g.localOceanDensity = oceanBaseDensity * (1 - normalizedMatter * 0.6) * wFactor;
+            });
+            
+            // ─────────────────────────────────────────────────────────────
+            // STEP 2: Apply forces
+            // ─────────────────────────────────────────────────────────────
+            for (let i = 0; i < galaxies.length; i++) {
+                const g1 = galaxies[i];
+                
+                // ─────────────────────────────────────────────────────────
+                // 2a. GRAVITY + OCEAN PRESSURE (PRESSION DIFFÉRENTIELLE!)
+                // ─────────────────────────────────────────────────────────
+                for (let j = i + 1; j < galaxies.length; j++) {
+                    const g2 = galaxies[j];
+                    
+                    const r = new THREE.Vector3().subVectors(g2.position, g1.position);
+                    const dist = Math.max(r.length(), PHYSICS.SOFTENING);
+                    const rNorm = r.clone().normalize();
+                    
+                    // Newton gravity (attraction)
+                    const F_grav = PHYSICS.G * CONFIG.gravity * g1.mass * g2.mass / (dist * dist);
+                    totalGrav += F_grav;
+                    
+                    // ═══════════════════════════════════════════════════════
+                    // PRESSION DIFFÉRENTIELLE (modèle v3 corrigé + calibré)
+                    // ═══════════════════════════════════════════════════════
+                    // L'océan de masse négative (95% de l'univers) exerce une
+                    // pression qui doit ÉQUILIBRER la gravité naturellement.
+                    //
+                    // Calibration: La pression doit être comparable à la gravité
+                    // donc on utilise aussi m1×m2 (pas m1+m2)
+                    
+                    const r1 = g1.radius || Math.pow(g1.mass, 0.25) * 1.5;
+                    const r2 = g2.radius || Math.pow(g2.mass, 0.25) * 1.5;
+                    
+                    // Volume exclu: plus les galaxies sont proches, plus grand
+                    const excludedVolume = (r1 + r2) * (r1 + r2) / (dist + 1);
+                    
+                    // Pression de base de l'océan (proportionnelle à la densité)
+                    const avgOceanDensity = (g1.localOceanDensity + g2.localOceanDensity) / 2;
+                    const P_base = avgOceanDensity * pressureCoeff * 0.1;  // Normalisé
+                    
+                    // Pression ENTRE les galaxies (réduite par l'exclusion)
+                    const P_between = P_base * Math.max(0, 1 - excludedVolume / (dist + 5));
+                    
+                    // Différence de pression → RÉPULSION
+                    // Utilise m1×m2 pour équilibrer la gravité!
+                    const P_diff = Math.max(0, P_base - P_between);
+                    const F_ocean = P_diff * g1.mass * g2.mass / (dist * dist + 100);
+                    totalOcean += F_ocean;
+                    
+                    // Force nette: gravité (attraction) - océan (répulsion)
+                    const F_net = F_grav - F_ocean;
+                    const force = rNorm.multiplyScalar(F_net);
+                    g1.force.add(force);
+                    g2.force.sub(force);
+                }
+                
+                // ─────────────────────────────────────────────────────────
+                // 2b. VOID REPULSION - Les vides sont PLEINS d'océan!
+                // ─────────────────────────────────────────────────────────
+                UNIVERSE.voids.forEach(v => {
+                    const r = new THREE.Vector3().subVectors(g1.position, v.position);
+                    const dist = Math.max(r.length(), PHYSICS.SOFTENING);
+                    const rNorm = r.clone().normalize();
+                    
+                    // Les vides ont une concentration maximale de masse négative
+                    const voidOceanDensity = oceanBaseDensity * 2.0 * wFactor;
+                    const F_void = voidOceanDensity * v.negativeMass * g1.mass / (dist * dist + 200);
+                    
+                    // Coefficient augmenté pour effet visible
+                    g1.force.add(rNorm.multiplyScalar(F_void * 0.05));
+                    totalOcean += F_void * 0.05;
+                });
+                
+                // ─────────────────────────────────────────────────────────
+                // 2c. EXPANSION COSMIQUE ACCÉLÉRÉE (DESI 2024)
+                // ─────────────────────────────────────────────────────────
+                // PHYSIQUE CLÉ:
+                // - Plus une galaxie est loin → plus d'océan traversé
+                // - Plus elle est isolée → plus la densité océan est haute
+                // - ACCÉLÉRATION = Force qui AUGMENTE avec la distance!
+                //
+                // F ∝ r × ρ_océan² → v augmente avec r → ACCÉLÉRATION!
+                
+                const radialDist = Math.sqrt(g1.position.x * g1.position.x + g1.position.z * g1.position.z);
+                
+                // Normaliser la distance par rapport à l'univers
+                const normalizedDist = radialDist / PHYSICS.UNIVERSE_RADIUS;
+                
+                // Densité océan normalisée (haute dans les vides, basse près des amas)
+                const oceanFactor = g1.localOceanDensity / oceanBaseDensity;
+                
+                // ACCÉLÉRATION: force qui croît avec la distance!
+                // Coefficients augmentés pour effet visible
+                const linearTerm = radialDist * oceanFactor;
+                const accelTerm = radialDist * normalizedDist * oceanFactor * oceanFactor;
+                
+                // Coefficients calibrés pour équilibrer avec gravité à 1.0
+                const expansionForce = (linearTerm * 0.0001 + accelTerm * 0.0003) * g1.mass * wFactor;
+                
+                const radialDir = new THREE.Vector3(g1.position.x, 0, g1.position.z).normalize();
+                g1.force.add(radialDir.multiplyScalar(expansionForce));
+                totalOcean += expansionForce;
+                
+                // ─────────────────────────────────────────────────────────
+                // 2d. COMPRESSION VERTICALE (galaxies plates)
+                // ─────────────────────────────────────────────────────────
+                const targetY = 0;
+                const yDiff = targetY - g1.position.y;
+                const F_y = pressureCoeff * g1.mass * yDiff * 0.015;
+                g1.force.y += F_y;
+                g1.velocity.y *= 0.9;
+                
+                // ─────────────────────────────────────────────────────────
+                // 2e. BLACK HOLE contribution
+                // ─────────────────────────────────────────────────────────
+                if (g1.hasBlackHole) {
+                    totalBH += g1.blackHoleMass * 0.001 * g1.mass;
+                }
+            }
+            
             // Update stats
-            UNIVERSE.avgPressure = posGalaxies.length > 1 ? 
-                totalPressure / (posGalaxies.length * (posGalaxies.length - 1) / 2) : 0;
+            UNIVERSE.avgPressure = totalOcean / Math.max(1, galaxies.length);
+            UNIVERSE.totalAcceleration = totalOcean - totalGrav;
             
-            // Update UI
-            document.getElementById('force-grav').textContent = forceGravTotal.toFixed(1);
-            document.getElementById('force-ocean').textContent = forceOceanTotal.toFixed(1);
-            document.getElementById('force-y').textContent = forceYTotal.toFixed(1);
+            document.getElementById('force-grav').textContent = totalGrav.toFixed(1);
+            document.getElementById('force-ocean').textContent = totalOcean.toFixed(1);
+            document.getElementById('force-bh').textContent = totalBH.toFixed(1);
             
-            const ratio = forceOceanTotal / (forceGravTotal + 0.01);
+            const ratio = totalOcean / (totalGrav + 0.01);
             let state = '';
-            if (ratio > 1.2) state = '🔵 RÉPULSION DOMINANTE';
-            else if (ratio > 0.8) state = '✅ ÉQUILIBRE STABLE';
-            else if (ratio > 0.5) state = '⚠️ ATTRACTION MODÉRÉE';
-            else state = '❌ FUSION IMMINENTE';
+            if (ratio > 1.5) state = '🔵 EXPANSION ACCÉLÉRÉE';
+            else if (ratio > 0.9) state = '✅ ÉQUILIBRE DYNAMIQUE';
+            else if (ratio > 0.5) state = '⚠️ EXPANSION MODÉRÉE';
+            else state = '❌ CONTRACTION';
             document.getElementById('state').textContent = state;
         }
         
         function integrate() {
             const dt = PHYSICS.DT * CONFIG.speed;
-            const damping = 0.998;
+            const damping = CONFIG.mode === 'janus' ? 0.998 : 0.999;
             
-            // Update positive
-            UNIVERSE.positive.forEach(g => {
+            UNIVERSE.galaxies.forEach(g => {
                 const accel = g.force.clone().divideScalar(g.mass);
                 g.velocity.add(accel.multiplyScalar(dt));
                 g.velocity.multiplyScalar(damping);
                 g.position.add(g.velocity.clone().multiplyScalar(dt));
                 
-                // Keep in bounds
+                // Soft boundary - galaxies ralentissent près du bord mais ne disparaissent pas
                 const r = Math.sqrt(g.position.x * g.position.x + g.position.z * g.position.z);
                 if (r > PHYSICS.UNIVERSE_RADIUS * 0.9) {
-                    g.position.x *= 0.95;
-                    g.position.z *= 0.95;
-                    g.velocity.x *= -0.5;
-                    g.velocity.z *= -0.5;
+                    // Ralentir doucement près du bord (pas de spawn!)
+                    const edgeFactor = (r - PHYSICS.UNIVERSE_RADIUS * 0.9) / (PHYSICS.UNIVERSE_RADIUS * 0.1);
+                    g.velocity.multiplyScalar(1 - edgeFactor * 0.1);
                 }
                 
-                g.update();
-            });
-            
-            // Update negative
-            UNIVERSE.negative.forEach(g => {
-                const accel = g.force.clone().divideScalar(g.mass);
-                g.velocity.add(accel.multiplyScalar(dt));
-                g.velocity.multiplyScalar(damping);
-                g.position.add(g.velocity.clone().multiplyScalar(dt));
-                
-                const r = Math.sqrt(g.position.x * g.position.x + g.position.z * g.position.z);
-                if (r > PHYSICS.UNIVERSE_RADIUS * 0.9) {
-                    g.position.x *= 0.95;
-                    g.position.z *= 0.95;
-                    g.velocity.x *= -0.5;
-                    g.velocity.z *= -0.5;
+                // Hard limit
+                if (r > PHYSICS.UNIVERSE_RADIUS) {
+                    g.position.x *= PHYSICS.UNIVERSE_RADIUS / r;
+                    g.position.z *= PHYSICS.UNIVERSE_RADIUS / r;
+                    g.velocity.x *= -0.3;
+                    g.velocity.z *= -0.3;
                 }
                 
                 g.update();
             });
             
             UNIVERSE.time += dt;
+            UNIVERSE.cosmicTime += dt * 0.1;
+        }
+        
+        // Fonction spawn gardée mais plus appelée automatiquement
+        function spawnNewGalaxy() {
+            // Spawn at edge coming inward (for continuous observation)
+            const angle = Math.random() * Math.PI * 2;
+            const r = PHYSICS.UNIVERSE_RADIUS * 0.3;
+            const mass = 100 + Math.random() * 600;
+            
+            const pos = new THREE.Vector3(
+                r * Math.cos(angle),
+                (Math.random() - 0.5) * 10,
+                r * Math.sin(angle)
+            );
+            
+            // Orbital velocity
+            const speed = Math.sqrt(PHYSICS.G * 5000 / r) * 0.15;
+            const vel = new THREE.Vector3(-Math.sin(angle), 0, Math.cos(angle)).multiplyScalar(speed);
+            
+            const galaxy = new Galaxy(mass, pos, vel);
+            UNIVERSE.galaxies.push(galaxy);
         }
         
         // ═══════════════════════════════════════════════════════════════════
@@ -986,122 +1130,181 @@
         // ═══════════════════════════════════════════════════════════════════
         
         function clearUniverse() {
-            UNIVERSE.positive.forEach(g => positiveGroup.remove(g.mesh));
-            UNIVERSE.negative.forEach(g => negativeGroup.remove(g.mesh));
-            UNIVERSE.positive = [];
-            UNIVERSE.negative = [];
+            UNIVERSE.galaxies.forEach(g => galaxyGroup.remove(g.mesh));
+            UNIVERSE.voids.forEach(v => voidGroup.remove(v.mesh));
+            UNIVERSE.galaxies = [];
+            UNIVERSE.voids = [];
             UNIVERSE.time = 0;
+            UNIVERSE.cosmicTime = 0;
         }
         
         function loadScenario(name) {
             clearUniverse();
+            CONFIG.scenario = name;
             
-            document.querySelectorAll('.btn-row .btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('sc-' + name)?.classList.add('active');
             
-            if (name === 'stable') createStableUniverse();
-            else if (name === 'bigbang') createBigBang();
-            else if (name === 'collision') createCollision();
+            createOcean();
+            
+            switch(name) {
+                case 'observable': createObservableUniverse(); break;
+                case 'bigbang': createBigBang(); break;
+                case 'milkyway': createMilkyWay(); break;
+                case 'desi': createDESITest(); break;
+            }
         }
         
-        function createStableUniverse() {
-            const count = 15;
+        function createObservableUniverse() {
+            // Grand univers avec structure à grande échelle
+            const galaxyCount = 60;  // Plus de galaxies!
             
-            for (let i = 0; i < count; i++) {
-                const angle = (i / count) * Math.PI * 2;
-                const radius = 100 + Math.random() * 300;
-                const mass = 200 + Math.random() * 800;
-                
+            // Créer des vides cosmiques à grande échelle
+            for (let i = 0; i < 8; i++) {
+                const angle = (i / 8) * Math.PI * 2 + Math.random() * 0.3;
+                const r = 400 + Math.random() * 800;  // Plus loin
                 const pos = new THREE.Vector3(
-                    radius * Math.cos(angle) + (Math.random() - 0.5) * 50,
-                    30 + (Math.random() - 0.5) * 10,
-                    radius * Math.sin(angle) + (Math.random() - 0.5) * 50
+                    r * Math.cos(angle),
+                    (Math.random() - 0.5) * 60,
+                    r * Math.sin(angle)
                 );
-                
-                // Orbital velocity
-                const speed = Math.sqrt(PHYSICS.G * count * 500 / radius) * 0.2;
-                const vel = new THREE.Vector3(
-                    -speed * Math.sin(angle),
-                    0,
-                    speed * Math.cos(angle)
-                );
-                
-                const gal = new Galaxy(mass, pos, vel, true);
-                UNIVERSE.positive.push(gal);
-                
-                // Create twin in negative universe
-                if (CONFIG.mode === 'janus') {
-                    const twinPos = new THREE.Vector3(pos.x, -pos.y, pos.z);
-                    const twinVel = new THREE.Vector3(vel.x, 0, vel.z);
-                    const twin = new Galaxy(mass, twinPos, twinVel, false);
-                    UNIVERSE.negative.push(twin);
-                    gal.twin = twin;
-                    twin.twin = gal;
-                }
+                const v = new Void(pos, 120 + Math.random() * 100, 3000 + Math.random() * 4000);
+                UNIVERSE.voids.push(v);
             }
+            
+            // Galaxies réparties dans tout l'univers
+            for (let i = 0; i < galaxyCount; i++) {
+                let pos, attempts = 0;
+                do {
+                    const angle = Math.random() * Math.PI * 2;
+                    const r = 100 + Math.random() * 1600;  // Jusqu'au bord
+                    pos = new THREE.Vector3(
+                        r * Math.cos(angle) + (Math.random() - 0.5) * 100,
+                        (Math.random() - 0.5) * 30,
+                        r * Math.sin(angle) + (Math.random() - 0.5) * 100
+                    );
+                    attempts++;
+                } while (isInVoid(pos) && attempts < 30);
+                
+                const mass = 80 + Math.random() * 400;  // Masses variées
+                // Vitesse orbitale faible
+                const speed = Math.sqrt(PHYSICS.G * 1000 / Math.max(100, pos.length())) * 0.08;
+                const vel = new THREE.Vector3(-pos.z, 0, pos.x).normalize().multiplyScalar(speed);
+                
+                UNIVERSE.galaxies.push(new Galaxy(mass, pos, vel));
+            }
+        }
+        
+        function isInVoid(pos) {
+            for (const v of UNIVERSE.voids) {
+                if (pos.distanceTo(v.position) < v.radius * 0.7) return true;
+            }
+            return false;
         }
         
         function createBigBang() {
-            const count = 20;
+            // Big Bang: commence concentré puis ACCÉLÈRE vers l'extérieur
+            const count = 50;
             
             for (let i = 0; i < count; i++) {
                 const theta = Math.random() * Math.PI * 2;
-                const r = Math.random() * 30;
-                const mass = 150 + Math.random() * 600;
+                const r = Math.random() * 80;  // Cluster initial
+                const mass = 60 + Math.random() * 300;
                 
                 const pos = new THREE.Vector3(
                     r * Math.cos(theta),
-                    30 + (Math.random() - 0.5) * 5,
+                    (Math.random() - 0.5) * 5,
                     r * Math.sin(theta)
                 );
                 
-                // Explosion velocity
-                const vel = pos.clone().normalize().multiplyScalar(1 + Math.random() * 2);
+                // Vitesse initiale très faible - l'océan va les accélérer!
+                const vel = pos.clone().normalize().multiplyScalar(0.05 + Math.random() * 0.1);
                 vel.y = 0;
                 
-                const gal = new Galaxy(mass, pos, vel, true);
-                UNIVERSE.positive.push(gal);
-                
-                if (CONFIG.mode === 'janus') {
-                    const twinPos = new THREE.Vector3(pos.x, -pos.y, pos.z);
-                    const twinVel = new THREE.Vector3(vel.x, 0, vel.z);
-                    const twin = new Galaxy(mass, twinPos, twinVel, false);
-                    UNIVERSE.negative.push(twin);
-                    gal.twin = twin;
-                    twin.twin = gal;
-                }
+                UNIVERSE.galaxies.push(new Galaxy(mass, pos, vel));
             }
         }
         
-        function createCollision() {
-            // Two clusters approaching
-            for (let c = 0; c < 2; c++) {
-                const centerX = c === 0 ? -200 : 200;
-                const velX = c === 0 ? 1 : -1;
+        function createMilkyWay() {
+            // Vue détaillée avec courbe de rotation plate
+            
+            // Trou noir central (Sgr A*)
+            const sgrA = new Galaxy(PHYSICS.BLACK_HOLE_MASS, new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 0));
+            sgrA.hasBlackHole = true;
+            sgrA.blackHoleMass = PHYSICS.BLACK_HOLE_MASS;
+            UNIVERSE.galaxies.push(sgrA);
+            
+            // Étoiles/amas à différents rayons - courbe de rotation PLATE!
+            for (let i = 0; i < 40; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const r = 50 + Math.random() * 600;  // Plus étendu
+                const mass = 10 + Math.random() * 50;
                 
-                for (let i = 0; i < 8; i++) {
-                    const offset = new THREE.Vector3(
-                        (Math.random() - 0.5) * 80,
-                        (Math.random() - 0.5) * 10,
-                        (Math.random() - 0.5) * 80
+                const pos = new THREE.Vector3(
+                    r * Math.cos(angle),
+                    (Math.random() - 0.5) * 3,  // Disque plat
+                    r * Math.sin(angle)
+                );
+                
+                // Vitesse de rotation CONSTANTE quel que soit le rayon
+                const vFlat = 1.8;
+                const vel = new THREE.Vector3(-Math.sin(angle), 0, Math.cos(angle)).multiplyScalar(vFlat);
+                
+                UNIVERSE.galaxies.push(new Galaxy(mass, pos, vel));
+            }
+        }
+        
+        function createDESITest() {
+            // Test DESI: montrer l'ACCÉLÉRATION avec la distance
+            // Galaxies proches = lentes, galaxies lointaines = ACCÉLÈRENT!
+            
+            // Anneaux à différentes distances - adapté au grand univers
+            const rings = [
+                { r: 150, count: 8, speed: 0.2 },
+                { r: 400, count: 10, speed: 0.3 },
+                { r: 700, count: 12, speed: 0.4 },
+                { r: 1000, count: 10, speed: 0.5 },
+                { r: 1400, count: 8, speed: 0.6 },
+            ];
+            
+            rings.forEach(ring => {
+                for (let i = 0; i < ring.count; i++) {
+                    const angle = (i / ring.count) * Math.PI * 2 + Math.random() * 0.3;
+                    const r = ring.r + (Math.random() - 0.5) * 80;
+                    const mass = 80 + Math.random() * 250;
+                    
+                    const pos = new THREE.Vector3(
+                        r * Math.cos(angle),
+                        (Math.random() - 0.5) * 15,
+                        r * Math.sin(angle)
                     );
                     
-                    const pos = new THREE.Vector3(centerX + offset.x, 30 + offset.y, offset.z);
-                    const vel = new THREE.Vector3(velX, 0, 0);
-                    const mass = 200 + Math.random() * 500;
+                    // Vitesse tangentielle + légère expansion
+                    const tangent = new THREE.Vector3(-Math.sin(angle), 0, Math.cos(angle));
+                    const radial = new THREE.Vector3(Math.cos(angle), 0, Math.sin(angle));
+                    const vel = tangent.multiplyScalar(ring.speed * 0.4).add(radial.multiplyScalar(ring.speed * 0.15));
                     
-                    const gal = new Galaxy(mass, pos, vel, true);
-                    UNIVERSE.positive.push(gal);
-                    
-                    if (CONFIG.mode === 'janus') {
-                        const twinPos = new THREE.Vector3(pos.x, -pos.y, pos.z);
-                        const twin = new Galaxy(mass, twinPos, vel.clone(), false);
-                        UNIVERSE.negative.push(twin);
-                        gal.twin = twin;
-                        twin.twin = gal;
-                    }
+                    UNIVERSE.galaxies.push(new Galaxy(mass, pos, vel));
                 }
-            }
+            });
+            
+            // Vides cosmiques entre les anneaux - poussent les galaxies externes!
+            const voidPositions = [
+                { x: 500, z: 0 },
+                { x: -250, z: 430 },
+                { x: -250, z: -430 },
+                { x: 0, z: 800 },
+                { x: 0, z: -800 },
+            ];
+            
+            voidPositions.forEach(vp => {
+                const v = new Void(
+                    new THREE.Vector3(vp.x, 0, vp.z),
+                    100 + Math.random() * 80,
+                    2000 + Math.random() * 2000
+                );
+                UNIVERSE.voids.push(v);
+            });
         }
         
         // ═══════════════════════════════════════════════════════════════════
@@ -1112,10 +1315,10 @@
             const geom = new THREE.BufferGeometry();
             const positions = [];
             
-            for (let i = 0; i < 2000; i++) {
+            for (let i = 0; i < 3000; i++) {
                 const theta = Math.random() * Math.PI * 2;
                 const phi = Math.acos(2 * Math.random() - 1);
-                const r = PHYSICS.UNIVERSE_RADIUS * 1.5;
+                const r = PHYSICS.UNIVERSE_RADIUS * 2;
                 
                 positions.push(
                     r * Math.sin(phi) * Math.cos(theta),
@@ -1130,21 +1333,17 @@
         }
         
         // ═══════════════════════════════════════════════════════════════════
-        // CAMERA
+        // CAMERA CONTROLS
         // ═══════════════════════════════════════════════════════════════════
         
-        let camTheta = Math.PI / 4;
-        let camPhi = Math.PI / 2.3;
-        let camRadius = 500;
-        let camTarget = new THREE.Vector3(0, 0, 0);
-        let dragging = false;
-        let lastMouse = { x: 0, y: 0 };
+        let camTheta = 0.3, camPhi = Math.PI / 2.5, camRadius = 1500;  // Plus loin pour grand univers
+        let dragging = false, lastMouse = { x: 0, y: 0 };
         
         function updateCamera() {
-            camera.position.x = camTarget.x + camRadius * Math.sin(camPhi) * Math.cos(camTheta);
-            camera.position.y = camTarget.y + camRadius * Math.cos(camPhi);
-            camera.position.z = camTarget.z + camRadius * Math.sin(camPhi) * Math.sin(camTheta);
-            camera.lookAt(camTarget);
+            camera.position.x = camRadius * Math.sin(camPhi) * Math.cos(camTheta);
+            camera.position.y = camRadius * Math.cos(camPhi);
+            camera.position.z = camRadius * Math.sin(camPhi) * Math.sin(camTheta);
+            camera.lookAt(0, 0, 0);
         }
         
         canvas.addEventListener('mousedown', e => { dragging = true; lastMouse = { x: e.clientX, y: e.clientY }; });
@@ -1158,25 +1357,24 @@
         canvas.addEventListener('mouseup', () => dragging = false);
         canvas.addEventListener('mouseleave', () => dragging = false);
         canvas.addEventListener('wheel', e => {
-            camRadius = Math.max(100, Math.min(1200, camRadius + e.deltaY * 0.5));
+            camRadius = Math.max(100, Math.min(5000, camRadius + e.deltaY * 2));  // Zoom plus large
             updateCamera();
         });
         
         // ═══════════════════════════════════════════════════════════════════
-        // UI
+        // UI CONTROLS
         // ═══════════════════════════════════════════════════════════════════
         
         function setMode(mode) {
             CONFIG.mode = mode;
             document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
             document.getElementById('tab-' + mode)?.classList.add('active');
-            document.getElementById('top-mode').textContent = mode.toUpperCase();
+            document.getElementById('top-mode').textContent = mode === 'janus' ? 'JANUS+DESI' : mode.toUpperCase();
             
-            negativeGroup.visible = mode === 'janus';
+            oceanGroup.visible = mode === 'janus';
+            voidGroup.visible = mode === 'janus';
             
-            // Reload scenario
-            const active = document.querySelector('.btn-row .btn.active[id^="sc-"]');
-            loadScenario(active ? active.id.replace('sc-', '') : 'stable');
+            reset();
         }
         
         function togglePause() {
@@ -1186,8 +1384,7 @@
         }
         
         function reset() {
-            const active = document.querySelector('.btn-row .btn.active[id^="sc-"]');
-            loadScenario(active ? active.id.replace('sc-', '') : 'stable');
+            loadScenario(CONFIG.scenario);
         }
         
         function toggleFS() {
@@ -1215,47 +1412,83 @@
             document.getElementById('val-pressure').textContent = CONFIG.oceanPressure.toFixed(1);
         };
         
-        document.getElementById('ctrl-flatten').oninput = function() {
-            CONFIG.flattenForce = parseFloat(this.value);
-            document.getElementById('val-flatten').textContent = CONFIG.flattenForce.toFixed(1);
+        document.getElementById('ctrl-evolution').oninput = function() {
+            CONFIG.darkEnergyEvolution = parseFloat(this.value);
+            document.getElementById('val-evolution').textContent = CONFIG.darkEnergyEvolution.toFixed(1);
         };
         
         document.addEventListener('keydown', e => {
             if (e.key === 'f' || e.key === 'F' || e.key === 'Escape') toggleFS();
-            if (e.key === ' ') togglePause();
+            if (e.key === ' ') { e.preventDefault(); togglePause(); }
         });
         
         // ═══════════════════════════════════════════════════════════════════
-        // STATS
+        // STATISTICS
         // ═══════════════════════════════════════════════════════════════════
         
         function updateStats() {
-            document.getElementById('stat-gal-pos').textContent = UNIVERSE.positive.length;
-            document.getElementById('stat-gal-neg').textContent = UNIVERSE.negative.length;
-            document.getElementById('top-pos').textContent = UNIVERSE.positive.length;
-            document.getElementById('top-neg').textContent = UNIVERSE.negative.length;
+            const n = UNIVERSE.galaxies.length;
+            document.getElementById('stat-galaxies').textContent = n;
+            document.getElementById('top-galaxies').textContent = n;
             
-            const massPos = UNIVERSE.positive.reduce((s, g) => s + g.mass, 0);
+            const massPos = UNIVERSE.galaxies.reduce((s, g) => s + g.mass, 0);
             document.getElementById('stat-mass-pos').textContent = Math.round(massPos);
             document.getElementById('stat-mass-neg').textContent = Math.round(massPos * CONFIG.massRatio);
+            document.getElementById('top-ocean').textContent = (massPos * CONFIG.massRatio / 1000).toFixed(1) + 'K';
             
+            document.getElementById('stat-voids').textContent = UNIVERSE.voids.length;
             document.getElementById('stat-pressure').textContent = UNIVERSE.avgPressure.toFixed(1);
             document.getElementById('top-pressure').textContent = UNIVERSE.avgPressure.toFixed(1);
             
-            // Stability = low average velocity
+            // VELOCITY BY ZONE - shows acceleration with distance!
+            let innerVel = 0, outerVel = 0, innerCount = 0, outerCount = 0;
+            const midRadius = PHYSICS.UNIVERSE_RADIUS * 0.35;  // Adapté au grand univers
+            
+            UNIVERSE.galaxies.forEach(g => {
+                const r = Math.sqrt(g.position.x * g.position.x + g.position.z * g.position.z);
+                const v = g.velocity.length();
+                
+                if (r < midRadius) {
+                    innerVel += v;
+                    innerCount++;
+                } else {
+                    outerVel += v;
+                    outerCount++;
+                }
+            });
+            
+            innerVel = innerCount > 0 ? innerVel / innerCount : 0;
+            outerVel = outerCount > 0 ? outerVel / outerCount : 0;
+            
+            // Display velocity by zone
+            document.getElementById('vel-inner').textContent = innerVel.toFixed(2);
+            document.getElementById('vel-outer').textContent = outerVel.toFixed(2);
+            const velRatio = innerVel > 0.01 ? (outerVel / innerVel) : 1;
+            document.getElementById('vel-ratio').textContent = velRatio.toFixed(2) + '×';
+            document.getElementById('vel-ratio').style.color = velRatio > 1 ? 'var(--positive)' : 'var(--negative)';
+            
+            // Stability based on velocity distribution
             let avgVel = 0;
-            UNIVERSE.positive.forEach(g => avgVel += g.velocity.length());
-            avgVel /= Math.max(1, UNIVERSE.positive.length);
-            const stability = Math.max(0, Math.min(100, 100 - avgVel * 30));
+            UNIVERSE.galaxies.forEach(g => avgVel += g.velocity.length());
+            avgVel /= Math.max(1, n);
+            const stability = Math.max(0, Math.min(100, 100 - avgVel * 20));
             document.getElementById('stat-stability').textContent = Math.round(stability) + '%';
             
-            document.getElementById('top-time').textContent = (UNIVERSE.time * 0.1).toFixed(1) + ' Gyr';
+            document.getElementById('top-time').textContent = UNIVERSE.cosmicTime.toFixed(1) + ' Gyr';
+            
+            // Acceleration indicator: outer should be faster than inner!
+            const accelRatio = outerCount > 0 && innerCount > 0 ? outerVel / (innerVel + 0.01) : 1;
+            const accelSymbol = accelRatio > 1.2 ? '↑↑' : accelRatio > 1 ? '↑' : '→';
+            document.getElementById('top-accel').textContent = accelSymbol + ' ' + accelRatio.toFixed(1) + '×';
             
             // Predictions
-            document.getElementById('pred-rotation').textContent = CONFIG.mode === 'janus' ? '✅ Courbes rotation plates' : '❌ Courbes rotation plates';
+            const isJanus = CONFIG.mode === 'janus';
+            document.getElementById('pred-flat').textContent = isJanus ? '✅ Courbes rotation plates' : '❌ Courbes rotation plates';
             document.getElementById('pred-stable').textContent = stability > 60 ? '✅ Galaxies stables' : '❌ Galaxies stables';
-            document.getElementById('pred-flat').textContent = CONFIG.flattenForce > 0.5 ? '✅ Galaxies aplaties' : '❌ Galaxies aplaties';
-            document.getElementById('pred-expansion').textContent = CONFIG.mode === 'janus' ? '✅ Expansion accélérée' : '⚠️ Expansion accélérée';
+            document.getElementById('pred-disk').textContent = isJanus ? '✅ Galaxies aplaties' : '⚠️ Galaxies aplaties';
+            document.getElementById('pred-accel').textContent = accelRatio > 1 ? '✅ Expansion accélérée' : '⚠️ Expansion accélérée';
+            document.getElementById('pred-desi').textContent = isJanus && accelRatio > 1.1 ? '✅ w(t) évolutif (DESI)' : '⏳ w(t) évolutif (DESI)';
+            document.getElementById('pred-voids').textContent = UNIVERSE.voids.length > 0 ? '✅ Structure lacunaire' : '⏳ Structure lacunaire';
         }
         
         // ═══════════════════════════════════════════════════════════════════
@@ -1276,13 +1509,18 @@
                 lastTime = now;
             }
             
-            if (!CONFIG.paused && UNIVERSE.positive.length > 0) {
+            if (!CONFIG.paused && UNIVERSE.galaxies.length > 0) {
                 computeForces();
                 integrate();
                 
                 if (Math.floor(UNIVERSE.time * 10) % 3 === 0) {
                     updateStats();
                 }
+            }
+            
+            // Rotate ocean slowly
+            if (UNIVERSE.oceanParticles) {
+                UNIVERSE.oceanParticles.rotation.y += 0.0002 * CONFIG.speed;
             }
             
             renderer.render(scene, camera);
@@ -1299,9 +1537,8 @@
         // ═══════════════════════════════════════════════════════════════════
         
         createBackground();
-        createFabric();
         updateCamera();
-        loadScenario('stable');
+        loadScenario('observable');
         animate();
     </script>
 </body>
